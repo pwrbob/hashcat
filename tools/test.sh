@@ -18,6 +18,9 @@ TC_MODES="6211 6212 6213 6221 6222 6223 6231 6232 6233 6241 6242 6243 29311 2931
 # List of VeraCrypt modes which have test containers
 VC_MODES="13711 13712 13713 13721 13722 13723 13731 13732 13733 13741 13742 13743 13751 13752 13753 13761 13762 13763 13771 13772 13773 13781 13782 13783 29411 29412 29413 29421 29422 29423 29431 29432 29433 29441 29442 29443 29451 29452 29453 29461 29462 29463 29471 29472 29473 29481 29482 29483"
 
+# List of modes that generate crypto-containers on the fly (only enabled with -g)
+GENERATE_CONTAINERS_MODES="34100"
+
 # List of modes which return a different output hash format than the input hash format
 NOCHECK_ENCODING="16800 22000"
 
@@ -257,6 +260,12 @@ function init()
   sed 's/^echo *|.*$//'       "${cmd_file}" | awk '{print $2}'                                                                    > "${OUTD}/${hash_type}_passwords.txt"
   sed 's/^echo *|/echo "" |/' "${cmd_file}" | awk '{t="";for(i=10;i<=NF;i++){if(t){t=t" "$i}else{t=$i}};print t}' | cut -d"'" -f2 > "${OUTD}/${hash_type}_hashes.txt"
 
+  if [ "${hash_type}" -eq 34100 ]; then
+    mv "${OUTD}/${hash_type}_hashes.txt" "${OUTD}/${hash_type}_hashes.tmp"
+    cat "${OUTD}/${hash_type}_hashes.tmp" | while read f; do cat $f; done > "${OUTD}/${hash_type}_hashes.txt"
+    rm "${OUTD}/${hash_type}_hashes.tmp"
+  fi
+
   if [ "${hash_type}" -eq 10300 ]; then
     #cat ${OUTD}/${hash_type}.sh | cut -d' ' -f11- | cut -d"'" -f2 > ${OUTD}/${hash_type}_hashes.txt
     cut -d"'" -f2 "${OUTD}/${hash_type}.sh" > "${OUTD}/${hash_type}_hashes.txt"
@@ -385,6 +394,12 @@ function init()
 
       sed 's/^echo *|.*$//'       "${cmd_file}" | awk '{print $2}'                                                                    > "${OUTD}/${hash_type}_passwords_multi_${i}.txt"
       sed 's/^echo *|/echo "" |/' "${cmd_file}" | awk '{t="";for(i=10;i<=NF;i++){if(t){t=t" "$i}else{t=$i}};print t}' | cut -d"'" -f2 > "${OUTD}/${hash_type}_hashes_multi_${i}.txt"
+
+      if [ "${hash_type}" -eq 34100 ]; then
+        mv "${OUTD}/${hash_type}_hashes_multi_${i}.txt" "${OUTD}/${hash_type}_hashes_multi_${i}.tmp"
+        cat  "${OUTD}/${hash_type}_hashes_multi_${i}.tmp" | while read f; do cat $f; done > "${OUTD}/${hash_type}_hashes_multi_${i}.txt"
+        rm  "${OUTD}/${hash_type}_hashes_multi_${i}.tmp"
+      fi
 
       if [ "${hash_type}" -eq 10300 ]; then
         #cat ${OUTD}/${hash_type}_multi_${i}.txt | cut -d' ' -f11- | cut -d"'" -f2 > ${OUTD}/${hash_type}_hashes_multi_${i}.txt
@@ -591,31 +606,45 @@ function attack_0()
       echo "${output}" >> "${OUTD}/logfull.txt"
 
       if [ "${ret}" -eq 0 ]; then
+        if   [ "${hash_type}" -ne  34100 ]; then
+          if [ "${pass_only}" -eq 1 ]; then
+            search=":${pass}"
+          else
+            search="${hash}:${pass}"
+          fi
 
-        if [ "${pass_only}" -eq 1 ]; then
-          search=":${pass}"
-        else
-          search="${hash}:${pass}"
+          echo "${output}" | grep -F "${search}" &>/dev/null
+          newRet=$?
         fi
 
-        echo "${output}" | grep -F "${search}" &>/dev/null
-
-        newRet=$?
-
-        if [ "${newRet}" -eq 2 ]; then
-
+        if [[ "${newRet}" -eq 2 || "${hash_type}" -eq 34100 ]]; then
           # out-of-memory, workaround
 
-          echo "${output}" | grep -v "^Unsupported\|^$" | head -1 > tmp_file_out
+          if [ "${hash_type}" -eq 34100 ]; then
+            search="$(cat ${hash} | tr -d '\n'):${pass}" #hash is a filename for 34100
+            echo "${output}" | grep -E '^\$luks\$' | head -1 > tmp_file_out #cracked hash from hashcat output
+          else
+            echo "${output}" | grep -v "^Unsupported\|^$" | head -1 > tmp_file_out #cracked hash from hashcat output
+          fi
+
           echo "${search}" > tmp_file_search
 
+          # echo -e "head tmp_file_out=\t$(cat tmp_file_out | head -c80)"
+          # echo -e "head tmp_file_search=\t$(cat tmp_file_search | head -c80)"
+          # echo -e "tail tmp_file_out=\t$(cat tmp_file_out | tail -c80)"
+          # echo -e "tail tmp_file_search=\t$(cat tmp_file_search | tail -c80)"
           out_md5=$(md5sum tmp_file_out | cut -d' ' -f1)
           search_md5=$(md5sum tmp_file_search | cut -d' ' -f1)
+          # echo -e "out_md5=\t$out_md5"
+          # echo -e "search_md5=\t$search_md5"
+          # echo ""
 
           rm tmp_file_out tmp_file_search
 
           if [ "${out_md5}" == "${search_md5}" ]; then
             newRet=0
+          else
+            newRet=10
           fi
         fi
 
@@ -701,15 +730,42 @@ function attack_0()
 
         pass=$(sed -n ${i}p "${OUTD}/${hash_type}_passwords.txt")
 
-        if [ "${pass_only}" -eq 1 ]; then
-          search=":${pass}"
-        else
-          search="${hash}:${pass}"
+        if   [ "${hash_type}" -ne  34100 ]; then
+          if [ "${pass_only}" -eq 1 ]; then
+            search=":${pass}"
+          else
+            search="${hash}:${pass}"
+          fi
+
+          echo "${output}" | grep -F "${search}" &>/dev/null
+
+          newRet=$?
         fi
 
-        echo "${output}" | grep -F "${search}" &>/dev/null
+        if [ "${hash_type}" -eq 34100 ]; then
+          search="$(echo ${hash} | tr -d '\n'):${pass}" #hash is read from file already
+          to_search_in_out="$(echo ${hash} | head -c 200)"
+          echo "${output}" | grep -F "$to_search_in_out" | head -1 > tmp_file_out #cracked hash from hashcat output
+          echo "${search}" > tmp_file_search
 
-        newRet=$?
+          # echo -e "head tmp_file_out=\t$(cat tmp_file_out | head -c80)"
+          # echo -e "head tmp_file_search=\t$(cat tmp_file_search | head -c80)"
+          # echo -e "tail tmp_file_out=\t$(cat tmp_file_out | tail -c80)"
+          # echo -e "tail tmp_file_search=\t$(cat tmp_file_search | tail -c80)"
+          out_md5=$(md5sum tmp_file_out | cut -d' ' -f1)
+          search_md5=$(md5sum tmp_file_search | cut -d' ' -f1)
+          # echo -e "out_md5=\t$out_md5"
+          # echo -e "search_md5=\t$search_md5"
+          # echo ""
+
+          rm tmp_file_out tmp_file_search
+
+          if [ "${out_md5}" == "${search_md5}" ]; then
+            newRet=0
+          else
+            newRet=10
+          fi
+        fi
 
         if [ "${newRet}" -ne 0 ]; then
           if [ "${newRet}" -eq 2 ]; then
@@ -1182,10 +1238,19 @@ function attack_3()
 
         line_dict=$(sed -n ${i}p "${dict}")
 
-        if [ "${pass_only}" -eq 1 ]; then
-          search=":${line_dict}"
+
+        if   [ "${hash_type}" -eq  34100 ]; then
+          if [ "${pass_only}" -eq 1 ]; then
+            search=":${line_dict}"
+          else
+            search="$(cat ${hash} | tr -d '\n'):${line_dict}" #hash is a filename for 34100
+          fi
         else
-          search="${hash}:${line_dict}"
+          if [ "${pass_only}" -eq 1 ]; then
+            search=":${line_dict}"
+          else
+            search="${hash}:${line_dict}"
+          fi
         fi
 
         echo "${output}" | grep -F "${search}" &>/dev/null
@@ -3618,6 +3683,8 @@ OPTIONS:
   -I    Use this folder as input/output folder for packaged tests
         (string)    => path to folder
 
+  -g    Generate crypto-containers on-the-fly (requires sudo)
+
   -h    Show this help
 
 EOF
@@ -3635,8 +3702,9 @@ VECTOR="default"
 HT=0
 PACKAGE=0
 OPTIMIZED=1
+GENERATE_CONTAINERS=0
 
-while getopts "V:t:m:a:b:hcpd:x:o:d:D:F:POI:s:fr:" opt; do
+while getopts "V:t:m:a:b:hcpd:x:o:d:D:F:POI:s:fr:g" opt; do
 
   case ${opt} in
     "V")
@@ -3772,6 +3840,10 @@ while getopts "V:t:m:a:b:hcpd:x:o:d:D:F:POI:s:fr:" opt; do
       RUNTIME=${OPTARG}
       ;;
 
+    "g")
+      GENERATE_CONTAINERS=1
+      ;;
+
     \?)
       usage
       ;;
@@ -3884,6 +3956,29 @@ if [ "${PACKAGE}" -eq 0 ] || [ -z "${PACKAGE_FOLDER}" ]; then
     fi
   fi
 
+
+  if [[ "${GENERATE_CONTAINERS}" -eq 1 ]]; then
+    NEED_SUDO=0
+    if [[ ${HT} -eq 65535 ]]; then
+      NEED_SUDO=1
+    else
+      for TMP_HT in $(seq "${HT_MIN}" "${HT_MAX}"); do
+        if is_in_array "${TMP_HT}" ${GENERATE_CONTAINERS_MODES}; then
+          NEED_SUDO=1
+          break
+        fi
+      done
+    fi
+
+    if [[ "${NEED_SUDO}" -eq 1 ]]; then
+      if sudo -n true 2>/dev/null; then
+        true
+      else
+        echo "We'll need sudo to generate crypto-containers on-the-fly"
+      fi
+    fi
+  fi
+
   if [ -z "${PACKAGE_FOLDER}" ]; then
 
     # make new dir
@@ -3892,6 +3987,12 @@ if [ "${PACKAGE}" -eq 0 ] || [ -z "${PACKAGE_FOLDER}" ]; then
     # generate random test entry
     if [ "${HT}" -eq 65535 ]; then
       for TMP_HT in ${HASH_TYPES}; do
+
+        if is_in_array "${TMP_HT}" ${GENERATE_CONTAINERS_MODES} && [[ "${GENERATE_CONTAINERS}" -eq 0 ]]; then
+          echo "Skipping ${TMP_HT}: missing -g flag"
+          continue
+        fi
+
         if ! is_in_array "${TMP_HT}" ${LUKS_MODES}; then
           if ! is_in_array "${TMP_HT}" ${TC_MODES}; then
             if ! is_in_array "${TMP_HT}" ${VC_MODES}; then
@@ -3905,6 +4006,11 @@ if [ "${PACKAGE}" -eq 0 ] || [ -z "${PACKAGE_FOLDER}" ]; then
     else
       for TMP_HT in $(seq "${HT_MIN}" "${HT_MAX}"); do
         if ! is_in_array "${TMP_HT}" ${HASH_TYPES}; then
+          continue
+        fi
+
+        if is_in_array "${TMP_HT}" ${GENERATE_CONTAINERS_MODES} && [[ "${GENERATE_CONTAINERS}" -eq 0 ]]; then
+          echo "Skipping ${TMP_HT}: missing -g flag"
           continue
         fi
 
@@ -4136,7 +4242,7 @@ if [ "${PACKAGE}" -eq 1 ]; then
     copy_cl_dir=1
   else
     for TMP_HT in $(seq "${HT_MIN}" "${HT_MAX}"); do
-      if is_in_array "${TMP_HT}" "${LUKS_MODES}"; then
+      if is_in_array "${TMP_HT}" ${LUKS_MODES}; then
         copy_luks_dir=1
       elif is_in_array "${TMP_HT}" ${TC_MODES}; then
         copy_tc_dir=1
