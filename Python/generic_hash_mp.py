@@ -42,12 +42,9 @@ def init(ctx):
 def term(ctx):
   hcmp.term(ctx)
 
-# This code is only intended to enable debugging via a standalone Python interpreter.
-# It makes development easier as you don't have to use a hashcat to test your changes.
-# Read passwords from stdin
+
 if __name__ == '__main__':
-  # we've been called by Python (debugger) directly
-  # this codepath is never called by hashcat
+  # Main is only run when debugging this python script and never when -m 73000 is called directly from hashcat cli
 
   hcshared.add_hashcat_path_to_environment()
   ctx = None
