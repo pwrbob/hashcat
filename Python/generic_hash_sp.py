@@ -47,17 +47,7 @@ if __name__ == '__main__':
   # Main is only run when debugging this python script and never when -m 72000 is called directly from hashcat cli
 
   hcshared.add_hashcat_path_to_environment()
-  ctx = None
-
-  # For unsalted hashes the hashcat ctx object can be left empty
-  if ctx is None:
-    ctx = {
-    "salts_buf": bytes(572),
-    "esalts_buf": bytes(2056),
-    "st_salts_buf": bytes(572),
-    "st_esalts_buf": bytes(2056),
-    "parallelism": 4
-  }
+  ctx = hcshared.load_ctx(sys.argv)
 
   init(ctx)
   hashcat_passwords = 256

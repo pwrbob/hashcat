@@ -1,5 +1,5 @@
 #!/bin/bash python3
-
+import pickle
 import sys
 import struct
 import hashlib
@@ -36,7 +36,7 @@ def kernel_loop(ctx,passwords,salt_id,is_selftest):
   return hcmp.handle_queue(ctx,passwords,salt_id,is_selftest)
 
 def init(ctx):
-  # hcshared.dump_hashcat_ctx(ctx) #enable this to dump the ctx from hashcat
+  #hcshared.dump_hashcat_ctx(ctx) #enable this to dump the ctx from hashcat
   hcmp.init(ctx,extract_esalts)
 
 def term(ctx):
@@ -47,17 +47,7 @@ if __name__ == '__main__':
   # Main is only run when debugging this python script and never when -m 73000 is called directly from hashcat cli
 
   hcshared.add_hashcat_path_to_environment()
-  ctx = None
-
-  # For unsalted hashes, the hashcat ctx can be left empty
-  if ctx is None:
-    ctx = {
-      "salts_buf": bytes(572),
-      "esalts_buf": bytes(2056),
-      "st_salts_buf": bytes(572),
-      "st_esalts_buf": bytes(2056),
-      "parallelism": 4
-    }
+  ctx = hcshared.load_ctx(sys.argv)
 
   init(ctx)
   hashcat_passwords = 256
