@@ -4148,6 +4148,7 @@ if [ "${PACKAGE}" -eq 0 ] || [ -z "${PACKAGE_FOLDER}" ]; then
           VECTOR=${CUR_WIDTH}
           OPTS="${OPTS_OLD} --backend-vector-width ${VECTOR}"
 
+          # Slow hashes only have a single kernel to test, so we only test with a0
           if [ ${IS_SLOW} -eq 1 ]; then
 
             # Look up if this is one of supported VeraCrypt modes
