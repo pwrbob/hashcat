@@ -86,20 +86,26 @@ def dump_hashcat_ctx(ctx):
   hcsp.term(ctx)
 
 def load_ctx(python_arguments):
-  if len(python_arguments) > 1 :
-    hashcat_ctx = Path(python_arguments[1])
-    if hashcat_ctx.exists():
-      with open(hashcat_ctx, "rb") as f:
-        return pickle.load(f)
-  else:
-    print(f"There is no hashcat ctx file to load. Assuming your hashes are unsalted.")
-    return {
+  # Empty ctx for unsalted hashes:
+  ctx = {
       "salts_buf": bytes(572),
       "esalts_buf": bytes(2056),
       "st_salts_buf": bytes(572),
       "st_esalts_buf": bytes(2056),
       "parallelism": 4
     }
+
+  if len(python_arguments) > 1 :
+    # Load valid hashcat ctx from a file for salted hashes
+    hashcat_ctx = Path(python_arguments[1])
+    if hashcat_ctx.exists():
+      with open(hashcat_ctx, "rb") as f:
+        return pickle.load(f)
+    else:
+      print("Hashcat ctx file not found, using empty ctx.")
+  else:
+    print(f"There is no hashcat ctx file to load. Assuming your hashes are unsalted.")
+  return ctx
 
 
 def add_hashcat_path_to_environment():
