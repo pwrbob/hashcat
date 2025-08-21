@@ -145,12 +145,8 @@ def pprint_bytes_runs(obj, *, indent=2, prefix=None):
         print(rendered)
 
 def dump_hashcat_ctx(ctx):
-  print("")
-  print("Dump hashcat's ctx to allow for the (e)salts to be populated correctly")
-  print("  enable this code, run hashcat with -m73000, update the ctx-variable at the top of __main__, and disable this code again")
+  print("Dumping hashcat ctx...")
   pprint_bytes_runs(ctx, prefix="ctx")
-  # import pprint
-  # pprint.pprint(ctx) #this this prints without summarizing runs of zero-bytes outputting a big struct..
   print("hashcat ctx dumped, press [q] to quit.")
   hcsp.term(ctx)
 
