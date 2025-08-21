@@ -1,4 +1,4 @@
-## test.sh usage
+# test.sh usage
 
 Hashcat's unit tests: full background in [docs/hashcat-plugin-development-guide.md](docs/hashcat-plugin-development-guide.md).
 Small summary on how to use:
@@ -24,7 +24,7 @@ sudo apt install cryptsetup #LUKS2 testing
 ```
 
 
-# Example usage
+### Example usage
 ```
 ./test.sh -m 0 -D1 -t all
 ```
