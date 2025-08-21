@@ -1,6 +1,7 @@
 import struct
 import sys
 from pathlib import Path
+import hcsp
 
 # Extract a blob that is a list of salt_t entries and convert it to a list of dictionaries
 # The salt_t is a fixed data-type so we can handle it here
@@ -150,8 +151,8 @@ def dump_hashcat_ctx(ctx):
   pprint_bytes_runs(ctx, prefix="ctx")
   # import pprint
   # pprint.pprint(ctx) #this this prints without summarizing runs of zero-bytes outputting a big struct..
-  print("")
-  exit()
+  print("hashcat ctx dumped, press [q] to quit.")
+  hcsp.term(ctx)
 
 def add_hashcat_path_to_environment():
   # add the hashcat path to the environment to import the hcshared and hcmp libraries
