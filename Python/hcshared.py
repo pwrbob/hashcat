@@ -4,9 +4,10 @@ from pathlib import Path
 import hcsp
 import pickle
 
+# Global defs
+script_dir = Path(__file__).resolve().parent
 # Extract a blob that is a list of salt_t entries and convert it to a list of dictionaries
 # The salt_t is a fixed data-type so we can handle it here
-
 def extract_salts(salts_buf) -> list:
   salts=[]
   for salt_buf, salt_buf_pc, salt_len, salt_len_pc, salt_iter, salt_iter2, salt_dimy, salt_sign, salt_repeats, orig_pos, digests_cnt, digests_done, digests_offset, scrypt_N, scrypt_r, scrypt_p in struct.iter_unpack("256s 256s I I I I I 8s I I I I I I I I", salts_buf):
@@ -78,7 +79,6 @@ def _worker_batch(passwords, salt_id, is_selftest, user_fn, salts, st_salts):
 
 def dump_hashcat_ctx(ctx):
   print("Dumping hashcat ctx...")
-  script_dir = Path(__file__).resolve().parent
   with open(script_dir.joinpath("hashcat.ctx"), "wb") as f:
     pickle.dump(ctx, f)
     print(f"Dumped hashcat ctx to: \n {script_dir.joinpath('hashcat.ctx')} \n")
@@ -110,7 +110,6 @@ def load_ctx(python_arguments):
 
 def add_hashcat_path_to_environment():
   # add the hashcat path to the environment to import the hcshared and hcmp libraries
-  script_dir = Path(__file__).resolve().parent
   if script_dir.name == "Python" and script_dir.parent.name == "hashcat":
     sys.path.insert(0, script_dir)
   else:
