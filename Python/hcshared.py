@@ -85,7 +85,7 @@ def dump_hashcat_ctx(ctx):
   print("Press [q] to quit hashcat.")
   hcsp.term(ctx)
 
-def load_ctx(python_arguments):
+def load_ctx(hashcat_ctx=script_dir.joinpath("hashcat.ctx")):
   # Empty ctx for unsalted hashes:
   ctx = {
       "salts_buf": bytes(572),
@@ -94,17 +94,11 @@ def load_ctx(python_arguments):
       "st_esalts_buf": bytes(2056),
       "parallelism": 4
     }
-
-  if len(python_arguments) > 1 :
-    # Load valid hashcat ctx from a file for salted hashes
-    hashcat_ctx = Path(python_arguments[1])
-    if hashcat_ctx.exists():
-      with open(hashcat_ctx, "rb") as f:
-        return pickle.load(f)
-    else:
-      print("Hashcat ctx file not found, using empty ctx.")
+  if hashcat_ctx.exists():
+    with open(hashcat_ctx, "rb") as f:
+      return pickle.load(f)
   else:
-    print(f"There is no hashcat ctx file to load. Assuming your hashes are unsalted.")
+    print("Hashcat ctx file not found, using empty ctx, assuming your hashes are unsalted.")
   return ctx
 
 
