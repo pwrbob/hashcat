@@ -77,7 +77,11 @@ def _worker_batch(passwords, salt_id, is_selftest, user_fn, salts, st_salts):
             hashes.append("invalid-password")
     return hashes
 
-def dump_hashcat_ctx(ctx):
+def dump_hashcat_ctx(ctx, source):
+  if source == '__main__':
+    exit("You are trying to dump hashcat ctx by calling the python script directly. This will not work. "
+         "Call this module through hashcat instead. e.g. $ hashcat -m 73000 ")
+
   print("Dumping hashcat ctx...")
   with open(script_dir.joinpath("hashcat.ctx"), "wb") as f:
     pickle.dump(ctx, f)
