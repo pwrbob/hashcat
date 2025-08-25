@@ -100,7 +100,7 @@ def load_ctx(selftest_hash, hashcat_ctx=script_dir.joinpath("hashcat.ctx")):
       "parallelism": 4
     }
   if selftest_hash == "33522b0fd9812aa68586f66dba7c17a8ce64344137f9c7d8b11f32a6921c22de*9348746780603343":
-    print("You are running the example python script, so load the example ctx file instead")
+    print("You are running the example with example selftest-hash, so load the example ctx file instead.")
     with open(script_dir.joinpath("example.ctx"), "rb") as f:
       return pickle.load(f)
 
@@ -111,6 +111,15 @@ def load_ctx(selftest_hash, hashcat_ctx=script_dir.joinpath("hashcat.ctx")):
     print("Hashcat ctx file not found, using empty ctx, assuming your hashes are unsalted.")
   return ctx
 
+def verify_ctx(ctx, selftest_hash):
+  if len(ctx['st_salts']) > 0:
+    hash = ctx['st_salts'][0]['esalt']['hash_buf'].decode('utf-8')
+    salt = ctx['st_salts'][0]['esalt']['salt_buf'].decode('utf-8')
+    if hash in selftest_hash and salt in selftest_hash:
+      return True
+    else:
+      exit("Hashcat ctx does not contain correct selftest values. It is likely the loaded ctx is incorrect!")
+  exit("No selftest value found for hashcat ctx. It is likely the loaded ctx is incorrect!")
 
 def add_hashcat_path_to_environment():
   # add the hashcat path to the environment to import the hcshared and hcmp libraries
