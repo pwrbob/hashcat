@@ -47,7 +47,7 @@ if __name__ == '__main__':
   # Main is only run when debugging this python script and never when -m 72000 is called directly from hashcat cli
 
   hcshared.add_hashcat_path_to_environment()
-  # Enter path to ctx file as argument when dumped to the non-standard location.
+  # Load hashcat ctx from a file dumped when runnng -m 73000 . Optional argument is a Path() object to ctx file.
   ctx = hcshared.load_ctx()
 
   init(ctx)
