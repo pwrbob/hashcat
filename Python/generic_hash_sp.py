@@ -36,6 +36,7 @@ def kernel_loop(ctx,passwords,salt_id,is_selftest):
   return hcsp.handle_queue(ctx,passwords,salt_id,is_selftest)
 
 def init(ctx):
+  # Uncomment this line below to dump the hashcat ctx for your salted hash
   # hcshared.dump_hashcat_ctx(ctx, source=__name__) #enable this to dump the ctx from hashcat
   hcsp.init(ctx,extract_esalts)
 
@@ -48,7 +49,7 @@ if __name__ == '__main__':
 
   hcshared.add_hashcat_path_to_environment()
   # Load hashcat ctx from a file dumped when runnng -m 73000 . Optional argument is a Path() object to ctx file.
-  ctx = hcshared.load_ctx()
+  ctx = hcshared.load_ctx(ST_HASH)
 
   init(ctx)
   hashcat_passwords = 256

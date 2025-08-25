@@ -80,7 +80,8 @@ def _worker_batch(passwords, salt_id, is_selftest, user_fn, salts, st_salts):
 def dump_hashcat_ctx(ctx, source):
   if source == '__main__':
     exit("You are trying to dump hashcat ctx by calling the python script directly. This will not work. "
-         "Call this module through hashcat instead. e.g. $ hashcat -m 73000 ")
+         "\n To dump the ctx call this module '$ hashcat -m 73000 -b' or $ hashcat -m 72000 -b "
+         "\n To debug your python bridge, disable the call to hcshared.dump_hashcat_ctx() in your script.")
 
   print("Dumping hashcat ctx...")
   with open(script_dir.joinpath("hashcat.ctx"), "wb") as f:
@@ -89,7 +90,7 @@ def dump_hashcat_ctx(ctx, source):
   print("Press [q] to quit hashcat.")
   hcsp.term(ctx)
 
-def load_ctx(hashcat_ctx=script_dir.joinpath("hashcat.ctx")):
+def load_ctx(selftest_hash, hashcat_ctx=script_dir.joinpath("hashcat.ctx")):
   # Empty ctx for unsalted hashes:
   ctx = {
       "salts_buf": bytes(572),
@@ -98,6 +99,11 @@ def load_ctx(hashcat_ctx=script_dir.joinpath("hashcat.ctx")):
       "st_esalts_buf": bytes(2056),
       "parallelism": 4
     }
+  if selftest_hash == "33522b0fd9812aa68586f66dba7c17a8ce64344137f9c7d8b11f32a6921c22de*9348746780603343":
+    print("You are running the example python script, so load the example ctx file instead")
+    with open(script_dir.joinpath("example.ctx"), "rb") as f:
+      return pickle.load(f)
+
   if hashcat_ctx.exists():
     with open(hashcat_ctx, "rb") as f:
       return pickle.load(f)
