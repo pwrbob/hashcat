@@ -36,7 +36,7 @@ def kernel_loop(ctx,passwords,salt_id,is_selftest):
   return hcsp.handle_queue(ctx,passwords,salt_id,is_selftest)
 
 def init(ctx):
-  # hcshared.dump_hashcat_ctx(ctx) #enable this to dump the ctx from hashcat
+  # hcshared.dump_hashcat_ctx(ctx, source=__name__) #enable this to dump the ctx from hashcat
   hcsp.init(ctx,extract_esalts)
 
 def term(ctx):
