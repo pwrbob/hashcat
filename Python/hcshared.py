@@ -80,14 +80,14 @@ def _worker_batch(passwords, salt_id, is_selftest, user_fn, salts, st_salts):
 
 def dump_hashcat_ctx(ctx, source):
   if source == '__main__':
-    exit("You are trying to dump hashcat ctx by calling the python script directly. This will not work. "
-         "\n To dump the ctx call this module '$ hashcat -m 73000 -b' or $ hashcat -m 72000 -b "
-         "\n To debug your python bridge, disable the call to hcshared.dump_hashcat_ctx() in your script.")
+    exit(f"You are trying to dump hashcat ctx by calling the python script directly. This will not work."
+         f"\n To dump the ctx run 'hashcat -m 73000 -b' or 'hashcat -m 72000 -b'"
+         f"\n To debug your python bridge, comment the call to hcshared.dump_hashcat_ctx() in your script.")
 
   print("\nDumping hashcat ctx...")
   with open(script_dir.joinpath("hashcat.ctx"), "wb") as f:
     pickle.dump(ctx, f)
-    print(f"Dumped hashcat ctx to: {script_dir.joinpath('hashcat.ctx')} \n")
+    print(f"Dumped hashcat ctx to: {script_dir.joinpath('hashcat.ctx')}\n")
   hcsp.term(ctx)
 
 def load_ctx(selftest_hash, hashcat_ctx=script_dir.joinpath("hashcat.ctx")):
@@ -115,5 +115,5 @@ def add_hashcat_path_to_environment():
   files = [script_dir/"hcmp.py", script_dir/"hcshared.py" ]
   missing = [f for f in files if not f.exists()]
   for m in missing:
-      exit(f"Cant find {m} in the same directory, so debugging of those impossible", 1)
+      print(f"Cant find {m} in the same directory, so debugging of those impossible", file=sys.stderr)
   sys.path.insert(0, script_dir)
