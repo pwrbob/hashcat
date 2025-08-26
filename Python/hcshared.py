@@ -118,7 +118,7 @@ def verify_ctx(ctx, selftest_hash):
     if len(salt) < 1:
       print("No salts found during ctx verification. Assuming unsalted hashes.")
       return True
-    elif hash == selftest_hash and salt == selftest_hash:
+    elif '*' in selftest_hash and f'{hash}*{salt}' == selftest_hash:
       return True
     else:
       exit("Hashcat ctx does not contain correct selftest values. It is likely the loaded ctx is incorrect!")
