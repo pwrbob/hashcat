@@ -31,7 +31,10 @@ bool generic_global_init (hashcat_ctx_t *hashcat_ctx)
   generic_ctx->global_ctx.cache_dir   = folder_config->cache_dir;
   generic_ctx->global_ctx.profile_dir = folder_config->profile_dir;
 
-  const bool rc = generic_ctx->global_init (&generic_ctx->global_ctx, generic_ctx->thread_ctx);
+  // ok we can also add hashcat_ctx, which might be hard to bind, but we make it optional
+  // so those who support it, can have full access into hashcat core
+
+  const bool rc = generic_ctx->global_init (&generic_ctx->global_ctx, generic_ctx->thread_ctx, hashcat_ctx);
 
   if (generic_ctx->global_ctx.error == true)
   {
@@ -47,7 +50,7 @@ void generic_global_term (hashcat_ctx_t *hashcat_ctx)
 {
   generic_ctx_t *generic_ctx = hashcat_ctx->generic_ctx;
 
-  generic_ctx->global_term (&generic_ctx->global_ctx, generic_ctx->thread_ctx);
+  generic_ctx->global_term (&generic_ctx->global_ctx, generic_ctx->thread_ctx, hashcat_ctx);
 
   if (generic_ctx->global_ctx.error == true)
   {
@@ -59,7 +62,7 @@ u64 generic_global_keyspace (hashcat_ctx_t *hashcat_ctx)
 {
   generic_ctx_t *generic_ctx = hashcat_ctx->generic_ctx;
 
-  const u64 keyspace = generic_ctx->global_keyspace (&generic_ctx->global_ctx, generic_ctx->thread_ctx);
+  const u64 keyspace = generic_ctx->global_keyspace (&generic_ctx->global_ctx, generic_ctx->thread_ctx, hashcat_ctx);
 
   if (generic_ctx->global_ctx.error == true)
   {

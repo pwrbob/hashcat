@@ -80,7 +80,7 @@ static char *seekdb_path (generic_global_ctx_t *global_ctx, const char *wordlist
   return seekdb_path;
 }
 
-static bool seekdb_save (const char *path, u64 line_count, u64 *db, u64 count)
+static bool seekdb_save (const char *path, u64 line_count, u64 *db, u64 count, const u64 size)
 {
   HCFILE fp;
 
@@ -90,6 +90,13 @@ static bool seekdb_save (const char *path, u64 line_count, u64 *db, u64 count)
   }
 
   if (hc_fwrite (&line_count, sizeof (u64), 1, &fp) != 1)
+  {
+    hc_fclose (&fp);
+
+    return false;
+  }
+
+  if (hc_fwrite (&size, sizeof (u64), 1, &fp) != 1)
   {
     hc_fclose (&fp);
 
@@ -108,7 +115,7 @@ static bool seekdb_save (const char *path, u64 line_count, u64 *db, u64 count)
   return true;
 }
 
-static u64 *seekdb_load (const char *path, u64 *count, u64 *line_count)
+static u64 *seekdb_load (const char *path, u64 *count, u64 *line_count, u64 *size)
 {
   HCFILE fp;
 
@@ -140,7 +147,14 @@ static u64 *seekdb_load (const char *path, u64 *count, u64 *line_count)
     return NULL;
   }
 
-  size_t rem = (st.st_size - sizeof (u64)) / sizeof (u64);
+  if (hc_fread (size, sizeof (u64), 1, &fp) != 1)
+  {
+    hc_fclose (&fp);
+
+    return NULL;
+  }
+
+  size_t rem = (st.st_size - sizeof (u64) - sizeof (u64)) / sizeof (u64);
 
   u64 *db = (u64 *) hcmalloc (rem * sizeof (u64));
 
@@ -167,7 +181,7 @@ static u64 *seekdb_load (const char *path, u64 *count, u64 *line_count)
   return db;
 }
 
-static u64 *seekdb_build (feed_thread_t *feed_thread, const char *seekdb_path, u64 *count, u64 *line_count)
+static u64 *seekdb_build (feed_thread_t *feed_thread, const char *seekdb_path, const char *wordlist, u64 *count, u64 *line_count, u64 *size, hashcat_ctx_t *hashcat_ctx)
 {
   const u8 *fd_mem = feed_thread->fd_mem;
 
@@ -182,6 +196,9 @@ static u64 *seekdb_build (feed_thread_t *feed_thread, const char *seekdb_path, u
   u64 checkpoints = 0;
 
   tmp[checkpoints++] = 0;
+
+  time_t now  = 0;
+  time_t prev = 0;
 
   while (fd_len)
   {
@@ -208,6 +225,29 @@ static u64 *seekdb_build (feed_thread_t *feed_thread, const char *seekdb_path, u
     {
       tmp[checkpoints++] = (size_t) ((const u8 *) fd_mem - (const u8 *) feed_thread->fd_mem);
     }
+
+    time (&now);
+
+    if ((now - prev) == 0) continue;
+
+    time (&prev);
+
+    const size_t cur_pos = feed_thread->fd_len - fd_len;
+
+    double percent = ((double) (cur_pos) / (double) feed_thread->fd_len) * 100;
+
+    if (percent < 100)
+    {
+      cache_generate_t cache_generate;
+
+      cache_generate.dictfile    = wordlist;
+      cache_generate.comp        = feed_thread->fd_len;
+      cache_generate.percent     = percent;
+      cache_generate.cnt         = cur_pos;
+      cache_generate.cnt2        = cur_pos;
+
+      EVENT_DATA (EVENT_WORDLIST_CACHE_GENERATE, &cache_generate, sizeof (cache_generate));
+    }
   }
 
   u64 *db = (u64 *) hccalloc (checkpoints, sizeof (u64));
@@ -218,7 +258,9 @@ static u64 *seekdb_build (feed_thread_t *feed_thread, const char *seekdb_path, u
 
   *line_count = lines;
 
-  seekdb_save (seekdb_path, *line_count, db, *count);
+  *size = feed_thread->fd_len;
+
+  seekdb_save (seekdb_path, *line_count, db, *count, feed_thread->fd_len);
 
   hcfree (tmp);
 

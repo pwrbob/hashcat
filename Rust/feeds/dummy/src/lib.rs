@@ -24,18 +24,18 @@ pub struct generic_thread_ctx_t
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn global_init (_global_ctx: *mut generic_global_ctx_t, _thread_ctx: *mut generic_thread_ctx_t) -> bool
+pub extern "C" fn global_init (_global_ctx: *mut generic_global_ctx_t, _thread_ctx: *mut generic_thread_ctx_t, _hashcat_ctx: *mut c_void) -> bool
 {
   true
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn global_term (_global_ctx: *mut generic_global_ctx_t, _thread_ctx: *mut generic_thread_ctx_t)
+pub extern "C" fn global_term (_global_ctx: *mut generic_global_ctx_t, _thread_ctx: *mut generic_thread_ctx_t, _hashcat_ctx: *mut c_void)
 {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn global_keyspace (_global_ctx: *mut generic_global_ctx_t, _thread_ctx: *mut generic_thread_ctx_t) -> u64
+pub extern "C" fn global_keyspace (_global_ctx: *mut generic_global_ctx_t, _thread_ctx: *mut generic_thread_ctx_t, _hashcat_ctx: *mut c_void) -> u64
 {
   0xffffffffffffffff
 }

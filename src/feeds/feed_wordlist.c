@@ -12,6 +12,7 @@
 #include "shared.h"
 #include "timer.h"
 #include "feed_wordlist.h"
+#include "event.h"
 #include "xxhash.h"
 
 #if defined (_WIN)
@@ -47,7 +48,7 @@ static size_t process_word (const u8 *buf, const size_t len, u8 *out_buf)
   return report_len;
 }
 
-bool global_init (MAYBE_UNUSED generic_global_ctx_t *global_ctx, MAYBE_UNUSED generic_thread_ctx_t *thread_ctx)
+bool global_init (MAYBE_UNUSED generic_global_ctx_t *global_ctx, MAYBE_UNUSED generic_thread_ctx_t *thread_ctx, MAYBE_UNUSED hashcat_ctx_t *hashcat_ctx)
 {
   // create our own context
 
@@ -68,11 +69,12 @@ bool global_init (MAYBE_UNUSED generic_global_ctx_t *global_ctx, MAYBE_UNUSED ge
   feed_global->seek_db    = NULL;
   feed_global->seek_count = 0;
   feed_global->line_count = 0;
+  feed_global->size       = 0;
 
   return true;
 }
 
-void global_term (MAYBE_UNUSED generic_global_ctx_t *global_ctx, MAYBE_UNUSED generic_thread_ctx_t *thread_ctx)
+void global_term (MAYBE_UNUSED generic_global_ctx_t *global_ctx, MAYBE_UNUSED generic_thread_ctx_t *thread_ctx, MAYBE_UNUSED hashcat_ctx_t *hashcat_ctx)
 {
   feed_global_t *feed_global = global_ctx->gbldata;
 
@@ -83,22 +85,24 @@ void global_term (MAYBE_UNUSED generic_global_ctx_t *global_ctx, MAYBE_UNUSED ge
   global_ctx->gbldata = NULL;
 }
 
-u64 global_keyspace (MAYBE_UNUSED generic_global_ctx_t *global_ctx, MAYBE_UNUSED generic_thread_ctx_t *thread_ctx)
+u64 global_keyspace (MAYBE_UNUSED generic_global_ctx_t *global_ctx, MAYBE_UNUSED generic_thread_ctx_t *thread_ctx, MAYBE_UNUSED hashcat_ctx_t *hashcat_ctx)
 {
   feed_global_t *feed_global = global_ctx->gbldata;
 
   char *seekdb_file = seekdb_path (global_ctx, feed_global->wordlist);
 
-  feed_global->seek_db = seekdb_load (seekdb_file, &feed_global->seek_count, &feed_global->line_count);
+  feed_global->seek_db = seekdb_load (seekdb_file, &feed_global->seek_count, &feed_global->line_count, &feed_global->size);
 
   if (feed_global->seek_db)
   {
-    if (global_ctx->quiet == false)
-    {
-      printf ("FEED: Loaded %" PRIu64 " entries from seekdb (%" PRIu64 " lines)\n\n",
-        feed_global->seek_count,
-        feed_global->line_count);
-    }
+    cache_hit_t cache_hit;
+
+    cache_hit.dictfile      = feed_global->wordlist;
+    cache_hit.stat.st_size  = feed_global->size;
+    cache_hit.cached_cnt    = feed_global->line_count;
+    cache_hit.keyspace      = feed_global->line_count;
+
+    EVENT_DATA (EVENT_WORDLIST_CACHE_HIT, &cache_hit, sizeof (cache_hit));
 
     hcfree (seekdb_file);
 
@@ -109,22 +113,26 @@ u64 global_keyspace (MAYBE_UNUSED generic_global_ctx_t *global_ctx, MAYBE_UNUSED
 
   feed_thread_t *feed_thread = thread_ctx->thrdata;
 
-  hc_timer_t t;
-  hc_timer_set (&t);
+  time_t rt_start;
 
-  feed_global->seek_db = seekdb_build (feed_thread, seekdb_file, &feed_global->seek_count, &feed_global->line_count);
+  time (&rt_start);
 
-  const float s = hc_timer_get (t) / 1000;
+  feed_global->seek_db = seekdb_build (feed_thread, seekdb_file, feed_global->wordlist, &feed_global->seek_count, &feed_global->line_count, &feed_global->size, hashcat_ctx);
 
-  thread_term (global_ctx, thread_ctx);
+  time_t rt_stop;
 
-  if (global_ctx->quiet == false)
-  {
-    printf ("FEED: Scanned %" PRIu64 " bytes in %.2fs = %" PRIu64 "MiB/s\n\n",
-      feed_thread->fd_len,
-      s,
-      (u64) (feed_thread->fd_len / s) / (1024 * 1024));
-  }
+  time (&rt_stop);
+
+  cache_generate_t cache_generate;
+
+  cache_generate.dictfile    = feed_global->wordlist;
+  cache_generate.comp        = feed_global->size;
+  cache_generate.percent     = 100;
+  cache_generate.cnt         = feed_global->line_count;
+  cache_generate.cnt2        = feed_global->line_count;
+  cache_generate.runtime     = rt_stop - rt_start;
+
+  EVENT_DATA (EVENT_WORDLIST_CACHE_GENERATE, &cache_generate, sizeof (cache_generate));
 
   hcfree (seekdb_file);
 
