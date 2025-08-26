@@ -84,7 +84,7 @@ def dump_hashcat_ctx(ctx, source):
          "\n To dump the ctx call this module '$ hashcat -m 73000 -b' or $ hashcat -m 72000 -b "
          "\n To debug your python bridge, disable the call to hcshared.dump_hashcat_ctx() in your script.")
 
-  print(" \n Dumping hashcat ctx...")
+  print("\nDumping hashcat ctx...")
   with open(script_dir.joinpath("hashcat.ctx"), "wb") as f:
     pickle.dump(ctx, f)
     print(f"Dumped hashcat ctx to: {script_dir.joinpath('hashcat.ctx')} \n")
