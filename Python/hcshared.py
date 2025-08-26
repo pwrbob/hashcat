@@ -100,7 +100,7 @@ def load_ctx(selftest_hash, hashcat_ctx=script_dir.joinpath("hashcat.ctx")):
       "parallelism": 4
     }
   if selftest_hash == "33522b0fd9812aa68586f66dba7c17a8ce64344137f9c7d8b11f32a6921c22de*9348746780603343":
-    print("You are running the example with example selftest-hash, so load the example ctx file instead.")
+    print("You are running the example with example selftest-hash, so the example ctx is loaded instead.")
     with open(script_dir.joinpath("example.ctx"), "rb") as f:
       return pickle.load(f)
 
