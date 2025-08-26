@@ -112,19 +112,6 @@ def load_ctx(selftest_hash, hashcat_ctx=script_dir.joinpath("hashcat.ctx")):
     print("Hashcat ctx file not found, using empty ctx, assuming your hashes are unsalted.")
   return ctx
 
-def verify_ctx(ctx, selftest_hash):
-  if len(ctx['st_salts']) > 0:
-    hash = ctx['st_salts'][0]['esalt']['hash_buf'].decode('utf-8')
-    salt = ctx['st_salts'][0]['esalt']['salt_buf'].decode('utf-8')
-    if len(salt) < 1:
-      print("No salts found during ctx verification. Assuming unsalted hashes.")
-      return True
-    elif '*' in selftest_hash and f'{hash}*{salt}' == selftest_hash:
-      return True
-    else:
-      exit("Hashcat ctx does not contain correct selftest values. It is likely the loaded ctx is incorrect!")
-  exit("No selftest value found for hashcat ctx. It is likely the loaded ctx is incorrect!")
-
 def add_hashcat_path_to_environment():
   files = [script_dir/"hcmp.py", script_dir/"hcshared.py" ]
   missing = [f for f in files if not f.exists()]
