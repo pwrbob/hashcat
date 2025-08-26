@@ -125,8 +125,8 @@ def verify_ctx(ctx, selftest_hash):
   exit("No selftest value found for hashcat ctx. It is likely the loaded ctx is incorrect!")
 
 def add_hashcat_path_to_environment():
-  # add the hashcat path to the environment to import the hcshared and hcmp libraries
-  if script_dir.name == "Python" and script_dir.parent.name == "hashcat":
-    sys.path.insert(0, script_dir)
-  else:
-    print(f"script ({script_dir}) is not running from the hashcat/Python folder, so the debugging of hcmp.py and hcshared.py is disabled", file=sys.stderr)
+  files = [script_dir/"hcmp.py", script_dir/"hcshared.py" ]
+  missing = [f for f in files if not f.exists()]
+  for m in missing:
+      exit(f"Cant find {m} in the same directory, so debugging of those impossible", 1)
+  sys.path.insert(0, script_dir)
