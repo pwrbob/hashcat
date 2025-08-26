@@ -50,7 +50,6 @@ if __name__ == '__main__':
   hcshared.add_hashcat_path_to_environment()
   # Load hashcat ctx from a file dumped when runnng -m 73000 . Optional argument is a Path() object to ctx file.
   ctx = hcshared.load_ctx(ST_HASH)
-  hcshared.verify_ctx(ctx, ST_HASH)
 
   init(ctx)
   hashcat_passwords = 256

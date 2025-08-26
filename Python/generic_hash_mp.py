@@ -51,7 +51,6 @@ if __name__ == '__main__':
   # Load hashcat ctx from a file dumped when runnng -m 73000 . Optional argument is a Path() object to ctx file.
   ctx = hcshared.load_ctx(ST_HASH)
   init(ctx)
-  hcshared.verify_ctx(ctx, ST_HASH)
 
   hashcat_passwords = 256
   passwords = []
