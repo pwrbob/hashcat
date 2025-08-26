@@ -100,7 +100,7 @@ def load_ctx(selftest_hash, hashcat_ctx=script_dir.joinpath("hashcat.ctx")):
       "parallelism": 4
     }
   if selftest_hash == "33522b0fd9812aa68586f66dba7c17a8ce64344137f9c7d8b11f32a6921c22de*9348746780603343":
-    print(f"You are running the example with example selftest-hash, so {example_ctx} is loaded.")
+    print(f"You are running the example with example selftest-hash, so {example_ctx} is loaded.", file=sys.stderr)
     with open(script_dir.joinpath(example_ctx), "rb") as f:
       return pickle.load(f)
 
@@ -108,7 +108,7 @@ def load_ctx(selftest_hash, hashcat_ctx=script_dir.joinpath("hashcat.ctx")):
     with open(hashcat_ctx, "rb") as f:
       return pickle.load(f)
   else:
-    print("Hashcat ctx file not found, using empty ctx, assuming your hashes are unsalted.")
+    print(f"{hashcat_ctx.name} not found, using empty ctx, assuming your hashes are unsalted.", file=sys.stderr)
   return ctx
 
 def add_hashcat_path_to_environment():
