@@ -6,6 +6,7 @@ import pickle
 
 # Global defs
 script_dir = Path(__file__).resolve().parent
+example_ctx = "example.ctx"
 # Extract a blob that is a list of salt_t entries and convert it to a list of dictionaries
 # The salt_t is a fixed data-type so we can handle it here
 def extract_salts(salts_buf) -> list:
@@ -100,8 +101,8 @@ def load_ctx(selftest_hash, hashcat_ctx=script_dir.joinpath("hashcat.ctx")):
       "parallelism": 4
     }
   if selftest_hash == "33522b0fd9812aa68586f66dba7c17a8ce64344137f9c7d8b11f32a6921c22de*9348746780603343":
-    print("You are running the example with example selftest-hash, so the example ctx is loaded instead.")
-    with open(script_dir.joinpath("example.ctx"), "rb") as f:
+    print(f"You are running the example with example selftest-hash, so {example_ctx} is loaded.")
+    with open(script_dir.joinpath(example_ctx), "rb") as f:
       return pickle.load(f)
 
   if hashcat_ctx.exists():
