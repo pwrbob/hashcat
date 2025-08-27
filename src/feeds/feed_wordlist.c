@@ -218,9 +218,9 @@ int thread_next (MAYBE_UNUSED generic_global_ctx_t *global_ctx, MAYBE_UNUSED gen
 {
   feed_thread_t *feed_thread = thread_ctx->thrdata;
 
-  const u8     *fd_mem = feed_thread->fd_mem;
-  const size_t  fd_len = feed_thread->fd_len;
-  const size_t  fd_off = feed_thread->fd_off;
+  const u8      *fd_mem = feed_thread->fd_mem;
+  const size_t   fd_len = feed_thread->fd_len;
+  size_t         fd_off = feed_thread->fd_off;
 
   if (fd_off >= fd_len)
   {
@@ -229,23 +229,26 @@ int thread_next (MAYBE_UNUSED generic_global_ctx_t *global_ctx, MAYBE_UNUSED gen
     return -1;
   }
 
-  const u8 *next = memchr (fd_mem + fd_off, '\n', fd_len - fd_off);
+  vector_nl_scan_t vector_scan = vector_scan_get ();
 
-  if (next == NULL) // if wordlist doesn't end with a newline
+  size_t remaining = fd_len - fd_off;
+  size_t step      = vector_scan (fd_mem + fd_off, remaining);
+
+  // if no newline, process till EOF
+  if (step == remaining)
   {
-    const size_t step_size = fd_len - fd_off;
-    const size_t word_len = process_word (fd_mem + fd_off, step_size, out_buf);
+    size_t word_len = process_word (fd_mem + fd_off, step, out_buf);
 
-    feed_thread->fd_off += step_size;
+    feed_thread->fd_off += step;
     feed_thread->fd_line++;
 
     return (int) word_len;
   }
 
-  const size_t step_size = (size_t) ((next - fd_mem) - fd_off);
-  const size_t word_len = process_word (fd_mem + fd_off, step_size, out_buf);
+  // found newline
+  size_t word_len = process_word (fd_mem + fd_off, step, out_buf);
 
-  feed_thread->fd_off += step_size + 1; // +1 = \n
+  feed_thread->fd_off += step + 1; // +1 = skip '\n'
   feed_thread->fd_line++;
 
   return (int) word_len;
@@ -256,8 +259,8 @@ bool thread_seek (MAYBE_UNUSED generic_global_ctx_t *global_ctx, MAYBE_UNUSED ge
   feed_thread_t *feed_thread = thread_ctx->thrdata;
   feed_global_t *feed_global = global_ctx->gbldata;
 
-  const u8     *fd_mem = feed_thread->fd_mem;
-  const size_t  fd_len = feed_thread->fd_len;
+  const u8      *fd_mem = feed_thread->fd_mem;
+  const size_t   fd_len = feed_thread->fd_len;
 
   if (offset >= feed_global->line_count)
   {
@@ -274,18 +277,22 @@ bool thread_seek (MAYBE_UNUSED generic_global_ctx_t *global_ctx, MAYBE_UNUSED ge
     feed_thread->fd_line = idx * SEEKDB_STEP;
   }
 
+  vector_nl_scan_t vector_scan = vector_scan_get ();
+
   while (feed_thread->fd_line < offset)
   {
-    const u8 *next = memchr (fd_mem + feed_thread->fd_off, '\n', fd_len - feed_thread->fd_off);
+    size_t remaining = fd_len - feed_thread->fd_off;
 
-    if (next == NULL)
+    if (remaining == 0)
     {
-      error_set (global_ctx, "Seek past EOF");
+      error_set(global_ctx, "Seek past EOF");
 
       return false;
     }
 
-    feed_thread->fd_off = (size_t) (next - fd_mem) + 1;
+    size_t step = vector_scan (fd_mem + feed_thread->fd_off, remaining);
+
+    feed_thread->fd_off += step + 1; // +1 for '\n'
     feed_thread->fd_line++;
   }
 

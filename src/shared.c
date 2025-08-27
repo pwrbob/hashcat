@@ -9,6 +9,7 @@
 #include "shared.h"
 #include "memory.h"
 #include "ext_lzma.h"
+#include "cpu_features.h"
 #include <errno.h>
 
 #if defined (__CYGWIN__)
@@ -33,6 +34,12 @@
     !defined (__FreeBSD__) && !defined (__DragonFly__)
 #include <sys/sysinfo.h>
 #endif
+#endif
+
+#if defined (__x86_64__) || defined (_M_X64) || defined (__i386__) || defined (_M_IX86)
+#include <immintrin.h>
+#elif defined (__aarch64__)
+#include <sse2neon.h>
 #endif
 
 static const char *const PA_000 = "OK";
@@ -1844,3 +1851,140 @@ u32 next_power_of_two (const u32 x)
   return r;
 }
 
+size_t vector_find_next_nl_generic (const u8 *ptr, size_t max_len)
+{
+  const u8 *found = memchr (ptr, '\n', max_len);
+
+  return found ? (size_t)(found - ptr) : max_len;
+}
+
+#if defined (__x86_64__) || defined (_M_X64) || defined (__i386__) || defined (_M_IX86) || defined (__aarch64__)
+#if !defined (__aarch64__)
+__attribute__((target("avx2")))
+#endif
+size_t vector_find_next_nl_avx2 (const u8 *ptr, size_t max_len)
+{
+  while (max_len >= 32)
+  {
+    #if defined (__aarch64__)
+
+    __m128i block1 = _mm_loadu_si128 ((const __m128i *)ptr);
+    __m128i block2 = _mm_loadu_si128 ((const __m128i *)(ptr + 16));
+    __m128i nl     = _mm_set1_epi8 ('\n');
+    __m128i cmp1 = _mm_cmpeq_epi8 (block1, nl);
+    __m128i cmp2 = _mm_cmpeq_epi8 (block2, nl);
+
+    int mask1 = _mm_movemask_epi8 (cmp1);
+    int mask2 = _mm_movemask_epi8 (cmp2);
+
+    if (mask1) return __builtin_ctz (mask1);
+    if (mask2) return 16 + __builtin_ctz (mask2);
+
+    #else
+
+    __m256i block = _mm256_loadu_si256 ((const __m256i *)ptr);
+    __m256i nl    = _mm256_set1_epi8 ('\n');
+    __m256i cmp   = _mm256_cmpeq_epi8 (block, nl);
+
+    int mask      = _mm256_movemask_epi8 (cmp);
+
+    if (mask != 0) return __builtin_ctz (mask);
+
+    #endif
+
+    ptr     += 32;
+    max_len -= 32;
+  }
+
+  return vector_find_next_nl_generic (ptr, max_len);
+}
+
+#if !defined (__aarch64__)
+__attribute__((target("avx512f,avx512bw")))
+#endif
+size_t vector_find_next_nl_avx512 (const u8 *ptr, size_t max_len)
+{
+  while (max_len >= 64)
+  {
+    #if defined (__aarch64__)
+
+    // Map 64-byte scan using two 32-byte NEON blocks
+    __m128i block1 = _mm_loadu_si128 ((const __m128i *)ptr);
+    __m128i block2 = _mm_loadu_si128 ((const __m128i *)(ptr + 16));
+    __m128i block3 = _mm_loadu_si128 ((const __m128i *)(ptr + 32));
+    __m128i block4 = _mm_loadu_si128 ((const __m128i *)(ptr + 48));
+    __m128i nl = _mm_set1_epi8 ('\n');
+
+    int mask1 = _mm_movemask_epi8 (_mm_cmpeq_epi8 (block1, nl));
+    int mask2 = _mm_movemask_epi8 (_mm_cmpeq_epi8 (block2, nl));
+    int mask3 = _mm_movemask_epi8 (_mm_cmpeq_epi8 (block3, nl));
+    int mask4 = _mm_movemask_epi8 (_mm_cmpeq_epi8 (block4, nl));
+
+    if (mask1) return __builtin_ctz (mask1);
+    if (mask2) return 16 + __builtin_ctz (mask2);
+    if (mask3) return 32 + __builtin_ctz (mask3);
+    if (mask4) return 48 + __builtin_ctz (mask4);
+
+    #else
+
+    __m512i block = _mm512_loadu_si512 ((const __m512i *)ptr);
+    __m512i nl    = _mm512_set1_epi8 ('\n');
+    __mmask64 mask = _mm512_cmpeq_epi8_mask (block, nl);
+
+    if (mask != 0) return __builtin_ctzll (mask);
+
+    #endif
+
+    ptr     += 64;
+    max_len -= 64;
+  }
+
+  return vector_find_next_nl_generic (ptr, max_len);
+}
+#endif // __x86_64__ || _M_X64 || __i386__ || _M_IX86 || __aarch64__
+
+static vector_nl_scan_t cached_scan = vector_find_next_nl_generic;
+
+__attribute__((constructor))
+static void vector_scan_init (void)
+{
+  #if defined (__x86_64__) || defined (_M_X64) || defined (__i386__) || defined (_M_IX86)
+
+  if (cpu_supports_avx512f ())
+  {
+    cached_scan = vector_find_next_nl_avx512;
+    printf("\n%s, using avx512\n", __func__);
+  }
+  else if (cpu_supports_avx2 ())
+  {
+    cached_scan = vector_find_next_nl_avx2;
+    printf("\n%s, using avx2\n", __func__);
+  }
+  else
+  {
+    cached_scan = vector_find_next_nl_generic;
+    printf("\n%s, using generic\n", __func__);
+  }
+
+  #elif defined (__aarch64__)
+
+  // Use 64-byte NEON-mapped function for Apple Silicon
+  // cached_scan = vector_find_next_nl_avx512;
+  // printf("\n%s, using 64-byte NEON-mapped functions\n", __func__);
+
+  // Use 32-byte NEON-mapped function for Apple Silicon
+  cached_scan = vector_find_next_nl_avx2;
+  printf("\n%s, using 32-byte NEON-mapped functions\n", __func__);
+
+  #else
+
+  cached_scan = vector_find_next_nl_generic;
+  printf("\n%s, using generic\n", __func__);
+
+  #endif
+}
+
+vector_nl_scan_t vector_scan_get (void)
+{
+  return cached_scan;
+}
