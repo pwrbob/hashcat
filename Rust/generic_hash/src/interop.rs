@@ -18,6 +18,11 @@ pub(crate) struct Context {
     pub esalts: Vec<generic_io_t>,
     pub st_salts: Vec<salt_t>,
     pub st_esalts: Vec<generic_io_t>,
+
+    pub bridge_parameter1: String,
+    pub bridge_parameter2: String,
+    pub bridge_parameter3: String,
+    pub bridge_parameter4: String,
 }
 
 impl Context {
@@ -32,6 +37,14 @@ impl Context {
 
 unsafe fn vec_from_raw_parts<T: Clone>(data: *const T, length: c_int) -> Vec<T> {
     Vec::from(unsafe { slice::from_raw_parts(data, length as usize) })
+}
+
+unsafe fn string_from_ptr(ptr: *const c_char) -> String {
+    if ptr.is_null() {
+        String::new()
+    } else {
+        unsafe { CStr::from_ptr(ptr).to_str().unwrap_or_default().to_string() }
+    }
 }
 
 #[unsafe(no_mangle)]
@@ -53,6 +66,11 @@ pub extern "C" fn new_context(
     st_esalts_cnt: c_int,
     st_esalts_size: c_int,
     st_esalts_buf: *const c_char,
+
+    bridge_parameter1: *const c_char,
+    bridge_parameter2: *const c_char,
+    bridge_parameter3: *const c_char,
+    bridge_parameter4: *const c_char,
 ) -> *mut c_void {
     assert!(!module_name.is_null());
     assert!(!salts_buf.is_null());
@@ -63,17 +81,17 @@ pub extern "C" fn new_context(
     assert_eq!(st_salts_size as usize, mem::size_of::<salt_t>());
     assert_eq!(esalts_size as usize, mem::size_of::<generic_io_t>());
     assert_eq!(st_esalts_size as usize, mem::size_of::<generic_io_t>());
-    let module_name = unsafe {
-        CStr::from_ptr(module_name)
-            .to_str()
-            .unwrap_or_default()
-            .to_string()
-    };
+    let module_name = unsafe { string_from_ptr(module_name) };
     let salts = unsafe { vec_from_raw_parts(salts_buf as *const salt_t, salts_cnt) };
     let esalts = unsafe { vec_from_raw_parts(esalts_buf as *const generic_io_t, esalts_cnt) };
     let st_salts = unsafe { vec_from_raw_parts(st_salts_buf as *const salt_t, st_salts_cnt) };
     let st_esalts =
         unsafe { vec_from_raw_parts(st_esalts_buf as *const generic_io_t, st_esalts_cnt) };
+
+    let bridge_parameter1 = unsafe { string_from_ptr(bridge_parameter1) };
+    let bridge_parameter2 = unsafe { string_from_ptr(bridge_parameter2) };
+    let bridge_parameter3 = unsafe { string_from_ptr(bridge_parameter3) };
+    let bridge_parameter4 = unsafe { string_from_ptr(bridge_parameter4) };
 
     Box::into_raw(Box::new(Context {
         module_name,
@@ -81,6 +99,10 @@ pub extern "C" fn new_context(
         esalts,
         st_salts,
         st_esalts,
+        bridge_parameter1,
+        bridge_parameter2,
+        bridge_parameter3,
+        bridge_parameter4,
     })) as *mut c_void
 }
 

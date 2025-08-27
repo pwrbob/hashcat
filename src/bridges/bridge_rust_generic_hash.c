@@ -59,7 +59,14 @@ typedef void *(*RS_NEW_CONTEXT)(
 
     int st_esalts_cnt,
     int st_esalts_size,
-    const char *st_esalts_buf);
+    const char *st_esalts_buf,
+
+    const char *bridge_parameter1,
+    const char *bridge_parameter2,
+    const char *bridge_parameter3,
+    const char *bridge_parameter4
+
+);
 typedef void (*RS_DROP_CONTEXT)(void *);
 
 typedef struct
@@ -91,6 +98,11 @@ typedef struct
   RS_KERNEL_LOOP kernel_loop;
   RS_NEW_CONTEXT new_context;
   RS_DROP_CONTEXT drop_context;
+
+  const char *bridge_parameter1;
+  const char *bridge_parameter2;
+  const char *bridge_parameter3;
+  const char *bridge_parameter4;
 
 } bridge_context_t;
 
@@ -227,6 +239,11 @@ void *platform_init(user_options_t *user_options)
     return NULL;
   }
 
+  bridge_context->bridge_parameter1 = user_options->bridge_parameter1;
+  bridge_context->bridge_parameter2 = user_options->bridge_parameter2;
+  bridge_context->bridge_parameter3 = user_options->bridge_parameter3;
+  bridge_context->bridge_parameter4 = user_options->bridge_parameter4;
+
   return bridge_context;
 }
 
@@ -266,7 +283,12 @@ bool thread_init(MAYBE_UNUSED void *platform_context, MAYBE_UNUSED hc_device_par
 
       1,
       hashconfig->esalt_size,
-      (const char *)hashes->st_esalts_buf);
+      (const char *)hashes->st_esalts_buf,
+
+      bridge_context->bridge_parameter1,
+      bridge_context->bridge_parameter2,
+      bridge_context->bridge_parameter3,
+      bridge_context->bridge_parameter4);
 
   // We should free module_name, but if a user changes the Rust code to
   // use it without copying, we could get a dangling pointer. So we are
