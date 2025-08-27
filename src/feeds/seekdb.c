@@ -197,8 +197,11 @@ static u64 *seekdb_build (feed_thread_t *feed_thread, const char *seekdb_path, c
 
   tmp[checkpoints++] = 0;
 
-  time_t now  = 0;
-  time_t prev = 0;
+  hc_timer_t start;
+
+  hc_timer_set (&start);
+
+  double prev_percent = 0;
 
   while (fd_len)
   {
@@ -226,25 +229,26 @@ static u64 *seekdb_build (feed_thread_t *feed_thread, const char *seekdb_path, c
       tmp[checkpoints++] = (size_t) ((const u8 *) fd_mem - (const u8 *) feed_thread->fd_mem);
     }
 
-    time (&now);
-
-    if ((now - prev) == 0) continue;
-
-    time (&prev);
+    // let's see if we update stats for the user
 
     const size_t cur_pos = feed_thread->fd_len - fd_len;
 
     double percent = ((double) (cur_pos) / (double) feed_thread->fd_len) * 100;
+
+    if ((prev_percent + 1.234) > percent) continue;
+
+    prev_percent = percent;
 
     if (percent < 100)
     {
       cache_generate_t cache_generate;
 
       cache_generate.dictfile    = wordlist;
-      cache_generate.comp        = feed_thread->fd_len;
+      cache_generate.comp        = cur_pos;
       cache_generate.percent     = percent;
-      cache_generate.cnt         = cur_pos;
-      cache_generate.cnt2        = cur_pos;
+      cache_generate.cnt         = lines;
+      cache_generate.cnt2        = lines;
+      cache_generate.runtime     = hc_timer_get (start);
 
       EVENT_DATA (EVENT_WORDLIST_CACHE_GENERATE, &cache_generate, sizeof (cache_generate));
     }

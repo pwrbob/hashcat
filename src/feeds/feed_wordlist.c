@@ -113,15 +113,11 @@ u64 global_keyspace (MAYBE_UNUSED generic_global_ctx_t *global_ctx, MAYBE_UNUSED
 
   feed_thread_t *feed_thread = thread_ctx->thrdata;
 
-  time_t rt_start;
+  hc_timer_t start;
 
-  time (&rt_start);
+  hc_timer_set (&start);
 
   feed_global->seek_db = seekdb_build (feed_thread, seekdb_file, feed_global->wordlist, &feed_global->seek_count, &feed_global->line_count, &feed_global->size, hashcat_ctx);
-
-  time_t rt_stop;
-
-  time (&rt_stop);
 
   cache_generate_t cache_generate;
 
@@ -130,7 +126,7 @@ u64 global_keyspace (MAYBE_UNUSED generic_global_ctx_t *global_ctx, MAYBE_UNUSED
   cache_generate.percent     = 100;
   cache_generate.cnt         = feed_global->line_count;
   cache_generate.cnt2        = feed_global->line_count;
-  cache_generate.runtime     = rt_stop - rt_start;
+  cache_generate.runtime     = hc_timer_get (start);
 
   EVENT_DATA (EVENT_WORDLIST_CACHE_GENERATE, &cache_generate, sizeof (cache_generate));
 

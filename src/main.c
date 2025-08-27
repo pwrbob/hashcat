@@ -988,27 +988,21 @@ static void main_wordlist_cache_generate (MAYBE_UNUSED hashcat_ctx_t *hashcat_ct
 
   if (cache_generate->percent < 100)
   {
-    event_log_info_nn (hashcat_ctx, "Dictionary cache building %s: %" PRIu64 " bytes (%.2f%%)", cache_generate->dictfile, cache_generate->comp, cache_generate->percent);
+    const u64 speed = cache_generate->comp / cache_generate->runtime;
+
+    event_log_info_nn (hashcat_ctx, "Dictionary cache building %s: %" PRIu64 " bytes (%.2f%%), %" PRIu64 " MiB/s", cache_generate->dictfile, cache_generate->comp, cache_generate->percent, speed / 1024);
   }
   else
   {
     char *runtime = (char *) hcmalloc (HCBUFSIZ_TINY);
-
-    const time_t runtime_sec = cache_generate->runtime;
-
-    struct tm *tmp;
-    struct tm  tm;
-
-    tmp = gmtime_r (&runtime_sec, &tm);
-
-    format_timer_display (tmp, runtime, HCBUFSIZ_TINY);
 
     event_log_info (hashcat_ctx, "Dictionary cache built:");
     event_log_info (hashcat_ctx, "* Filename..: %s", cache_generate->dictfile);
     event_log_info (hashcat_ctx, "* Passwords.: %" PRIu64, cache_generate->cnt2);
     event_log_info (hashcat_ctx, "* Bytes.....: %" PRId64, cache_generate->comp);
     event_log_info (hashcat_ctx, "* Keyspace..: %" PRIu64, cache_generate->cnt);
-    event_log_info (hashcat_ctx, "* Runtime...: %s", runtime);
+    event_log_info (hashcat_ctx, "* Speed.....: %" PRIu64 " MiB/s", (u64) (cache_generate->comp / cache_generate->runtime) / 1024);
+    event_log_info (hashcat_ctx, "* Runtime...: %.2fs", cache_generate->runtime / 1000);
     event_log_info (hashcat_ctx, NULL);
 
     hcfree (runtime);
