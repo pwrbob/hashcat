@@ -1953,17 +1953,17 @@ static void vector_scan_init (void)
   if (cpu_supports_avx512f ())
   {
     cached_scan = vector_find_next_nl_avx512;
-    printf("\n%s, using avx512\n", __func__);
+    //printf("\n%s, using avx512\n", __func__);
   }
   else if (cpu_supports_avx2 ())
   {
     cached_scan = vector_find_next_nl_avx2;
-    printf("\n%s, using avx2\n", __func__);
+    //printf("\n%s, using avx2\n", __func__);
   }
   else
   {
     cached_scan = vector_find_next_nl_generic;
-    printf("\n%s, using generic\n", __func__);
+    //printf("\n%s, using generic\n", __func__);
   }
 
   #elif defined (__aarch64__)
@@ -1974,12 +1974,12 @@ static void vector_scan_init (void)
 
   // Use 32-byte NEON-mapped function for Apple Silicon
   cached_scan = vector_find_next_nl_avx2;
-  printf("\n%s, using 32-byte NEON-mapped functions\n", __func__);
+  //printf("\n%s, using 32-byte NEON-mapped functions\n", __func__);
 
   #else
 
   cached_scan = vector_find_next_nl_generic;
-  printf("\n%s, using generic\n", __func__);
+  //printf("\n%s, using generic\n", __func__);
 
   #endif
 }
