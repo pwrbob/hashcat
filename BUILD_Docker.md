@@ -17,7 +17,7 @@ Optionally you can place custom *.patch or *.diff files into `patches/` folder (
 
 ### Output ###
 
-The resulting output package will be located in: `/root/out/hashcat-<version>-<compiler>.7z`.
+The resulting output package will be located in: `/root/xy/hashcat-<version>-<compiler>.7z`.
 
 You can copy it to your host with this command:
 
@@ -27,7 +27,7 @@ docker run --rm \
   -e HOST_GID=$(id -g) \
   -v $(pwd):/out \
   hashcat-binaries \
-  bash -c "cp /root/out/hashcat-*.7z /out && chown \$HOST_UID:\$HOST_GID /out/hashcat-*.7z"
+  bash -c "cp /root/xy/hashcat-*.7z /out && chown \$HOST_UID:\$HOST_GID /out/hashcat-*.7z"
 ```
 
 The package will be available on your host machine in the `out` directory.

@@ -142,4 +142,6 @@ RUN cd /root/xy && \
         fi; \
     done
 
+RUN mv /root/out/* /root/xy/ && rm -rf /root/out
+
 CMD ["/bin/bash"]
