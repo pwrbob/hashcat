@@ -1,21 +1,24 @@
-FROM ubuntu:20.04
+FROM ubuntu:18.04
 
 ENV DEBIAN_FRONTEND=noninteractive
-
-## Change to bash
 
 RUN echo "dash dash/sh boolean false" | debconf-set-selections && dpkg-reconfigure dash
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
+    apt-get upgrade -y && \
+    apt-get install -y \
     ca-certificates \
     build-essential \
     git \
     wget \
+    gnupg \
+    lsb-release \
+    software-properties-common \
     pkg-config \
     make \
     gcc-mingw-w64-x86-64 \
     g++-mingw-w64-x86-64 \
+    clang \
     dos2unix \
     libssl-dev \
     zlib1g-dev \
@@ -35,19 +38,26 @@ RUN apt-get update && \
 
 WORKDIR /root
 
-## Ubuntu 20.04 cmake version is incompatible to recent win-iconv so we use our own
+# Add llvm.sh script to install Clang 16
+RUN wget https://apt.llvm.org/llvm.sh && \
+    chmod +x llvm.sh && \
+    ./llvm.sh 16 && \
+    rm llvm.sh
+
+# Set Clang 16 as default
+RUN update-alternatives --install /usr/bin/clang clang /usr/bin/clang-16 100 && \
+    update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-16 100
+
 RUN wget https://github.com/Kitware/CMake/releases/download/v3.25.3/cmake-3.25.3-linux-x86_64.sh && \
     chmod +x cmake-3.25.3-linux-x86_64.sh && \
     ./cmake-3.25.3-linux-x86_64.sh --skip-license --prefix=/usr/local
 
-## Also 7z on ubuntu 20.04 is very outdated
 WORKDIR /root
-RUN git clone --branch 24.09 https://github.com/ip7z/7zip.git
+RUN git clone --branch 25.01 https://github.com/ip7z/7zip.git
 WORKDIR /root/7zip/CPP/7zip/Bundles/Alone2
 RUN make -f makefile.gcc -j
 RUN cp /root/7zip/CPP/7zip/Bundles/Alone2/_o/7zz /usr/local/bin/7z
 
-## Iconv for windows
 WORKDIR /root
 RUN git clone --branch v0.0.10 https://github.com/win-iconv/win-iconv.git
 
@@ -59,8 +69,6 @@ RUN cmake \
     -D CMAKE_CXX_COMPILER=$(which x86_64-w64-mingw32-g++) \
     . && \
     make install
-
-## Ubuntu 20.04: Python version 3.10 is too old, it lacks support for non-GIL mode
 
 WORKDIR /root
 
@@ -76,17 +84,11 @@ RUN ./configure --prefix=/opt/linux-python && \
 
 ENV PATH="/opt/linux-python/bin:$PATH"
 
-## Ubuntu 20.04: Rust is also too old, let's fetch a fresh one
-
 WORKDIR /root
 
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain stable
 ENV PATH="/root/.cargo/bin:${PATH}"
 RUN rustup target add x86_64-pc-windows-gnu
-
-## For Windows we also need python
-
-WORKDIR /root
 
 RUN mkdir /opt/win-python
 WORKDIR /opt/win-python
@@ -94,11 +96,11 @@ RUN wget https://repo.msys2.org/mingw/mingw64/mingw-w64-x86_64-python-3.12.10-1-
 RUN unzstd mingw-w64-x86_64-python-3.12.10-1-any.pkg.tar.zst
 RUN tar -xf mingw-w64-x86_64-python-3.12.10-1-any.pkg.tar
 
-## Custom patches
+RUN mkdir -p /root/out
 
 WORKDIR /root
 
-COPY docker/patches/ubuntu20/ /root/patches/
+COPY docker/patches/ubuntu18/ /root/patches/
 
 RUN git clone https://github.com/hashcat/hashcat.git
 
@@ -106,8 +108,40 @@ WORKDIR /root/hashcat
 
 RUN bash -c 'shopt -s nullglob; for p in /root/patches/*.patch /root/patches/*.diff; do pwd && git apply "$p"; done'
 
-RUN make -s binaries
+WORKDIR /root
+
+RUN cp -af hashcat hashcat-gcc && cp -af hashcat hashcat-clang
+
+WORKDIR /root/hashcat-gcc
+
+RUN make binaries -s
 
 RUN tools/package_bin.sh
 
-RUN ["/bin/bash"]
+RUN cd /root/xy && \
+    for f in hashcat-*; do \
+        if [ -d "$f" ]; then \
+            mv "$f" /root/out/"${f}-gcc"; \
+        elif [ "${f##*.}" = "7z" ]; then \
+            mv "$f" /root/out/"${f%.7z}-gcc.7z"; \
+        fi; \
+    done
+
+WORKDIR /root/hashcat-clang
+
+RUN make CC_LINUX=clang CC_WIN=clang CXX_LINUX=clang++ CXX_WIN=clang++ binaries -s
+
+RUN tools/package_bin.sh
+
+RUN cd /root/xy && \
+    for f in hashcat-*; do \
+        if [ -d "$f" ]; then \
+            mv "$f" /root/out/"${f}-clang"; \
+        elif [ "${f##*.}" = "7z" ]; then \
+            mv "$f" /root/out/"${f%.7z}-clang.7z"; \
+        fi; \
+    done
+
+RUN mv /root/out/* /root/xy/ && rm -rf /root/out
+
+CMD ["/bin/bash"]

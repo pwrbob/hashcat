@@ -35,6 +35,7 @@
 ##
 
 Docker: Add initial support for AMD GPUs when running Hashcat inside Docker using HIP and OpenCL
+Docker: Add Ubuntu18 docker which produces one version compiled with gcc/mingw and the other with clang
 Hardware Monitor: Suppress fan speed warnings for unified memory setups (typically internal GPUs)
 Testing Framework: Enable hardware monitor to improve testing of memory-heavy algorithms
 Unit tests: Updated install_modules.sh to use an external module for Digest::MD6
