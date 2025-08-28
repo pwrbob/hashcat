@@ -114,7 +114,7 @@ RUN cp -af hashcat hashcat-gcc && cp -af hashcat hashcat-clang
 
 WORKDIR /root/hashcat-gcc
 
-RUN make clean binaries -s
+RUN make binaries -s
 
 RUN tools/package_bin.sh
 
@@ -129,7 +129,7 @@ RUN cd /root/xy && \
 
 WORKDIR /root/hashcat-clang
 
-RUN make CC_LINUX=clang CC_WIN=clang CXX_LINUX=clang++ CXX_WIN=clang++ clean binaries -s
+RUN make CC_LINUX=clang CC_WIN=clang CXX_LINUX=clang++ CXX_WIN=clang++ binaries -s
 
 RUN tools/package_bin.sh
 
