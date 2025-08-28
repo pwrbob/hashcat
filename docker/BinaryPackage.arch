@@ -56,7 +56,7 @@ RUN rustup target add x86_64-pc-windows-gnu
 
 ## Custom patches
 WORKDIR /root
-COPY docker/patches/ /root/patches/
+COPY docker/patches/arch/ /root/patches/
 
 ## hashcat
 WORKDIR /root
