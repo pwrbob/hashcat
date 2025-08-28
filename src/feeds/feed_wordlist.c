@@ -229,10 +229,10 @@ int thread_next (MAYBE_UNUSED generic_global_ctx_t *global_ctx, MAYBE_UNUSED gen
     return -1;
   }
 
-  vector_nl_scan_t vector_scan = vector_scan_get ();
+  hc_memchr_t hc_memchr = hc_memchr_get ();
 
   size_t remaining = fd_len - fd_off;
-  size_t step      = vector_scan (fd_mem + fd_off, remaining);
+  size_t step      = hc_memchr (fd_mem + fd_off, '\n', remaining);
 
   // if no newline, process till EOF
   if (step == remaining)
@@ -277,7 +277,7 @@ bool thread_seek (MAYBE_UNUSED generic_global_ctx_t *global_ctx, MAYBE_UNUSED ge
     feed_thread->fd_line = idx * SEEKDB_STEP;
   }
 
-  vector_nl_scan_t vector_scan = vector_scan_get ();
+  hc_memchr_t hc_memchr = hc_memchr_get ();
 
   while (feed_thread->fd_line < offset)
   {
@@ -290,7 +290,7 @@ bool thread_seek (MAYBE_UNUSED generic_global_ctx_t *global_ctx, MAYBE_UNUSED ge
       return false;
     }
 
-    size_t step = vector_scan (fd_mem + feed_thread->fd_off, remaining);
+    size_t step = hc_memchr (fd_mem + feed_thread->fd_off, '\n', remaining);
 
     feed_thread->fd_off += step + 1; // +1 for '\n'
     feed_thread->fd_line++;
