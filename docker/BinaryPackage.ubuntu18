@@ -1,106 +1,132 @@
 FROM ubuntu:18.04
 
+ENV CLANG_VERSION=18
+ENV CMAKE_VERSION=4.1.1
+ENV SEVEN_ZIP_VERSION=25.01
+ENV WIN_ICONV_VERSION=v0.0.10
+ENV PYTHON_VERSION=3.13.5
+ENV MINGW_PYTHON_VERSION=3.12.11-1
+
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN echo "dash dash/sh boolean false" | debconf-set-selections && dpkg-reconfigure dash
 
-RUN apt-get update && \
-    apt-get upgrade -y && \
-    apt-get install -y \
-    ca-certificates \
+RUN apt-get update && apt-get install -y \
     build-essential \
-    git \
-    wget \
-    gnupg \
-    lsb-release \
-    software-properties-common \
-    pkg-config \
-    make \
-    gcc-mingw-w64-x86-64 \
-    g++-mingw-w64-x86-64 \
-    clang \
+    ca-certificates \
+    curl \
     dos2unix \
-    libssl-dev \
-    zlib1g-dev \
+    g++-mingw-w64-x86-64 \
+    gcc-mingw-w64-x86-64 \
+    git \
+    gnupg \
+    libbz2-dev \
+    libdb5.3-dev \
+    libexpat1-dev \
+    libgdbm-dev \
+    liblzma-dev \
     libncurses5-dev \
     libncursesw5-dev \
     libreadline-dev \
     libsqlite3-dev \
-    libgdbm-dev \
-    libdb5.3-dev \
-    libbz2-dev \
-    libexpat1-dev \
-    liblzma-dev tk-dev \
+    libssl-dev \
+    lsb-release \
+    make \
+    pkg-config \
+    software-properties-common \
+    tar \
+    tk-dev \
     unzip \
-    zstd \
-    curl \
-    tar
+    wget \
+    zlib1g-dev \
+    zstd
+
+# Install Clang using llvm.sh script
 
 WORKDIR /root
 
-# Add llvm.sh script to install Clang 16
-RUN wget https://apt.llvm.org/llvm.sh && \
-    chmod +x llvm.sh && \
-    ./llvm.sh 16 && \
-    rm llvm.sh
+RUN wget https://apt.llvm.org/llvm.sh && chmod +x llvm.sh && ./llvm.sh ${CLANG_VERSION} && rm llvm.sh
 
-# Set Clang 16 as default
-RUN update-alternatives --install /usr/bin/clang clang /usr/bin/clang-16 100 && \
-    update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-16 100
+RUN update-alternatives --install /usr/bin/clang clang /usr/bin/clang-${CLANG_VERSION} 100 && \
+    update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-${CLANG_VERSION} 100
 
-RUN wget https://github.com/Kitware/CMake/releases/download/v3.25.3/cmake-3.25.3-linux-x86_64.sh && \
-    chmod +x cmake-3.25.3-linux-x86_64.sh && \
-    ./cmake-3.25.3-linux-x86_64.sh --skip-license --prefix=/usr/local
+RUN rm -rf /var/lib/apt/lists/*
 
-WORKDIR /root
-RUN git clone --branch 25.01 https://github.com/ip7z/7zip.git
+# Install cmake
+
+RUN wget https://github.com/Kitware/CMake/releases/download/v$CMAKE_VERSION/cmake-${CMAKE_VERSION}-linux-x86_64.sh && \
+    chmod +x cmake-${CMAKE_VERSION}-linux-x86_64.sh && ./cmake-${CMAKE_VERSION}-linux-x86_64.sh --skip-license --prefix=/usr/local && \
+    rm -rf cmake-${CMAKE_VERSION}-linux-x86_64.sh
+
+# Install 7zip
+
+RUN git clone --branch ${SEVEN_ZIP_VERSION} https://github.com/ip7z/7zip.git
+
 WORKDIR /root/7zip/CPP/7zip/Bundles/Alone2
-RUN make -f makefile.gcc -j
-RUN cp /root/7zip/CPP/7zip/Bundles/Alone2/_o/7zz /usr/local/bin/7z
+
+RUN make -f makefile.gcc -j && cp _o/7zz /usr/local/bin/7z
 
 WORKDIR /root
-RUN git clone --branch v0.0.10 https://github.com/win-iconv/win-iconv.git
+
+RUN rm -rf /root/7zip
+
+# Install win-iconv
+
+RUN git clone --branch ${WIN_ICONV_VERSION} https://github.com/win-iconv/win-iconv.git
 
 WORKDIR /root/win-iconv
+
 RUN cmake \
     -D WIN_ICONV_BUILD_EXECUTABLE=OFF \
     -D CMAKE_INSTALL_PREFIX=/opt/win-iconv-64 \
     -D CMAKE_C_COMPILER=$(which x86_64-w64-mingw32-gcc) \
     -D CMAKE_CXX_COMPILER=$(which x86_64-w64-mingw32-g++) \
-    . && \
-    make install
+    . && make install
 
 WORKDIR /root
 
-ENV PYTHON_VERSION=3.13.3
+RUN rm -rf /root/win-iconv
 
-RUN wget https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tgz && \
-    tar xzf Python-${PYTHON_VERSION}.tgz
+# Install python3
+
+RUN wget https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tgz && tar xzf Python-${PYTHON_VERSION}.tgz
 
 WORKDIR /root/Python-${PYTHON_VERSION}
 
-RUN ./configure --prefix=/opt/linux-python && \
-    make -j && make install
+RUN ./configure --prefix=/opt/linux-python && make -j && make install
+
+WORKDIR /root
+
+RUN rm -rf /root/Python-*
 
 ENV PATH="/opt/linux-python/bin:$PATH"
 
-WORKDIR /root
+# Install rust toolchain
 
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain stable
+
 ENV PATH="/root/.cargo/bin:${PATH}"
+
 RUN rustup target add x86_64-pc-windows-gnu
 
+# Install mingw-w64 python3
+
 RUN mkdir /opt/win-python
+
 WORKDIR /opt/win-python
-RUN wget https://repo.msys2.org/mingw/mingw64/mingw-w64-x86_64-python-3.12.10-1-any.pkg.tar.zst
-RUN unzstd mingw-w64-x86_64-python-3.12.10-1-any.pkg.tar.zst
-RUN tar -xf mingw-w64-x86_64-python-3.12.10-1-any.pkg.tar
+
+RUN wget https://repo.msys2.org/mingw/mingw64/mingw-w64-x86_64-python-${MINGW_PYTHON_VERSION}-any.pkg.tar.zst && \
+    unzstd mingw-w64-x86_64-python-${MINGW_PYTHON_VERSION}-any.pkg.tar.zst && \
+    tar -xf mingw-w64-x86_64-python-${MINGW_PYTHON_VERSION}-any.pkg.tar && \
+    rm -rf mingw-w64-x86_64-python-${MINGW_PYTHON_VERSION}-any.pkg.*
+
+# Build hashcat
 
 RUN mkdir -p /root/out
 
-WORKDIR /root
-
 COPY docker/patches/ubuntu18/ /root/patches/
+
+WORKDIR /root
 
 RUN git clone https://github.com/hashcat/hashcat.git
 
