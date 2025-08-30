@@ -174,6 +174,22 @@ int generic_ctx_init (hashcat_ctx_t *hashcat_ctx)
     return -1;
   }
 
+  const int *generic_plugin_version = (const int *) hc_dlsym (generic_ctx->lib, "GENERIC_PLUGIN_VERSION");
+
+  if (!generic_plugin_version)
+  {
+    event_log_error (hashcat_ctx, "Can't open: %s: Missing GENERIC_PLUGIN_VERSION", generic_ctx->dynlib_filename);
+
+    return -1;
+  }
+
+  if (GENERIC_PLUGIN_VERSION_REQ > *generic_plugin_version)
+  {
+    event_log_error (hashcat_ctx, "Can't open: %s: Plugin is outdated %d > %d", generic_ctx->dynlib_filename, GENERIC_PLUGIN_VERSION_REQ, *generic_plugin_version);
+
+    return -1;
+  }
+
   HC_LOAD_FUNC_GENERIC (generic_ctx, global_init,     GENERIC_GLOBAL_INIT);
   HC_LOAD_FUNC_GENERIC (generic_ctx, global_term,     GENERIC_GLOBAL_TERM);
   HC_LOAD_FUNC_GENERIC (generic_ctx, global_keyspace, GENERIC_GLOBAL_KEYSPACE);

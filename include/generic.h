@@ -6,6 +6,8 @@
 #ifndef HC_GENERIC_H
 #define HC_GENERIC_H
 
+#define GENERIC_PLUGIN_VERSION_REQ 712
+
 #define HC_LOAD_FUNC_GENERIC(ptr, name, type)                                                \
 do                                                                                           \
 {                                                                                            \

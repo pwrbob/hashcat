@@ -11,9 +11,10 @@
 #include "folder.h"
 #include "shared.h"
 #include "timer.h"
-#include "feed_wordlist.h"
 #include "event.h"
 #include "xxhash.h"
+#include "generic.h"
+#include "feed_wordlist.h"
 
 #if defined (_WIN)
 #include "mmap_windows.c"
@@ -22,6 +23,8 @@
 #endif
 
 #include "seekdb.c"
+
+const int GENERIC_PLUGIN_VERSION = GENERIC_PLUGIN_VERSION_REQ;
 
 static void error_set (generic_global_ctx_t *global_ctx, const char *fmt, ...)
 {

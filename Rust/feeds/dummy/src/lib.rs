@@ -1,5 +1,8 @@
 use std::os::raw::{c_char, c_int, c_void};
 
+#[unsafe(no_mangle)]
+pub static GENERIC_PLUGIN_VERSION: i32 = 712;
+
 #[repr (C)]
 pub struct generic_global_ctx_t
 {

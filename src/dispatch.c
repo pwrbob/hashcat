@@ -1343,27 +1343,34 @@ static int calc (hashcat_ctx_t *hashcat_ctx, hc_device_param_t *device_param)
     }
     else if (attack_mode == ATTACK_MODE_GENERIC)
     {
+      int         rule_jk_len = (int) user_options_extra->rule_len_l;
+      const char *rule_jk_buf =       user_options->rule_buf_l;
+
+      const bool rule_engine_enabled = run_rule_engine (rule_jk_len, rule_jk_buf);
+
       while (status_ctx->run_thread_level1 == true)
       {
-        u64 words_extra = -1U;
-        u64 words_extra_total = 0;
+        u64 words_extra = -1U;      // rejects per loop
+        u64 words_extra_total = 0;  // rejects at the point of execution
 
         memset (device_param->pws_comp, 0, device_param->size_pws_comp);
         memset (device_param->pws_idx,  0, device_param->size_pws_idx);
 
         while (words_extra)
         {
-          const u64 work = get_work (hashcat_ctx, device_param, words_extra);
+          const u64 work_cnt = get_work (hashcat_ctx, device_param, words_extra);
 
-          if (work == 0) break;
+          if (work_cnt == 0) break;
 
           words_extra = 0;
 
           if (generic_thread_seek (hashcat_ctx, device_param->device_id, device_param->words_off) == false) break;
 
-          for (u64 work_cur = 0; work_cur < work; work_cur++)
+          for (u64 work_cur = 0; work_cur < work_cnt; work_cur++)
           {
-            u8 out_buf[256];
+            pw_idx_t *pw_idx = device_param->pws_idx + device_param->pws_cnt;
+
+            u8 *out_buf = (u8 *) (device_param->pws_comp + pw_idx->off);
 
             int out_len = generic_thread_next (hashcat_ctx, device_param->device_id, out_buf);
 
@@ -1382,6 +1389,17 @@ static int calc (hashcat_ctx_t *hashcat_ctx, hc_device_param_t *device_param)
               }
             }
 
+            if (rule_engine_enabled == true)
+            {
+              char rule_buf_out[RP_PASSWORD_SIZE] = { 0 };
+
+              const int rule_len_out = _old_apply_rule (rule_jk_buf, rule_jk_len, (char *) out_buf, (int) out_len, rule_buf_out);
+
+              out_len = rule_len_out;
+
+              if (out_len >= 0) memcpy (out_buf, rule_buf_out, rule_len_out);
+            }
+
             if ((out_len < (int) hashconfig->pw_min) || (out_len > (int) hashconfig->pw_max))
             {
               words_extra_total++;
@@ -1391,7 +1409,7 @@ static int calc (hashcat_ctx_t *hashcat_ctx, hc_device_param_t *device_param)
               continue;
             }
 
-            pw_add (device_param, out_buf, out_len);
+            pw_add_zerocopy (device_param, out_buf, out_len);
           }
 
           if (status_ctx->run_thread_level1 == false) break;
