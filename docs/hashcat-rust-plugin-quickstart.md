@@ -66,10 +66,10 @@ If you encounter issues with your Rust installation, see
 
 Next, add the required crate to the dependencies:
 
-    cd Rust/generic_hash
+    cd Rust/bridges/generic_hash
     cargo add yescrypt-mcf --git https://git.launchpad.net/yescrypt-mcf --tag v0.1.0
 
-Then edit `Rust/generic_hash/src/generic_hash.rs`:
+Then edit `Rust/bridges/generic_hash/src/generic_hash.rs`:
 
 ```rust
 // Trailing zeroes are necessary.
@@ -90,12 +90,12 @@ pub(crate) fn calc_hash(password: &[u8], salt: &[u8]) -> Vec<String> {
 
 and build the plugin:
 
-    cd Rust/generic_hash
+    cd Rust/bridges/generic_hash
     cargo build --release
 
 or, if you’re on Windows:
 
-    cd Rust/generic_hash
+    cd Rust/bridges/generic_hash
     cargo build --release --target x86_64-pc-windows-gnu
 
 That’s it.

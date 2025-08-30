@@ -188,9 +188,11 @@ static void units_term(bridge_context_t *bridge_context)
 }
 
 #if defined(_WIN)
-static char *DEFAULT_DYNLIB_FILENAME = "./Rust/generic_hash/target/x86_64-pc-windows-gnu/release/generic_hash.dll";
+static char *DEFAULT_DYNLIB_FILENAME = "./Rust/bridges/generic_hash/target/x86_64-pc-windows-gnu/release/generic_hash.dll";
+static char *DEFAULT_DYNLIB_FILENAME_FALLBACK = "./bridges/subs/generic_hash.dll";
 #else
-static char *DEFAULT_DYNLIB_FILENAME = "./Rust/generic_hash/target/release/libgeneric_hash.so";
+static char *DEFAULT_DYNLIB_FILENAME = "./Rust/bridges/generic_hash/target/release/libgeneric_hash.so";
+static char *DEFAULT_DYNLIB_FILENAME_FALLBACK = "./bridges/subs/libgeneric_hash.so";
 #endif
 
 void *platform_init(user_options_t *user_options)
@@ -203,7 +205,20 @@ void *platform_init(user_options_t *user_options)
   // Allocate platform context
 
   bridge_context_t *bridge_context = hcmalloc(sizeof(bridge_context_t));
-  bridge_context->dynlib_filename = (user_options->bridge_parameter1 == NULL) ? DEFAULT_DYNLIB_FILENAME : user_options->bridge_parameter1;
+
+  char *filename = DEFAULT_DYNLIB_FILENAME;
+  if (user_options->bridge_parameter1 != NULL)
+  {
+    filename = user_options->bridge_parameter1;
+  }
+  else
+  {
+    if (!hc_path_exist (filename))
+    {
+      filename = DEFAULT_DYNLIB_FILENAME_FALLBACK;
+    }
+  }
+  bridge_context->dynlib_filename = filename;
   bridge_context->lib = hc_dlopen(bridge_context->dynlib_filename);
   if (!bridge_context->lib)
   {

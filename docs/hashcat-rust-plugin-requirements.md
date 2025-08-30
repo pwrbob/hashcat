@@ -27,7 +27,7 @@ Linux, Windows, and macOS.
 
 3. **Customize the plugin**
 
-   Edit `Rust/generic_hash/src/generic_hash.rs` to fit your needs.
+   Edit `Rust/bridges/generic_hash/src/generic_hash.rs` to fit your needs.
    Typically, you only need to adjust:
 
    - `ST_HASH`
@@ -39,11 +39,11 @@ Linux, Windows, and macOS.
 4. **Build the customized plugin**
 
    ```
-   cd Rust/generic_hash
+   cd Rust/bridges/generic_hash
    cargo build --release
    ```
 
-   This produces `libgeneric_hash.so` in `Rust/generic_hash/target/release`.
+   This produces `libgeneric_hash.so` in `Rust/bridges/generic_hash/target/release`.
 
 5. **Run Hashcat**
 
@@ -85,7 +85,7 @@ Linux, Windows, and macOS.
 
 3. **Customize the plugin**
 
-   Edit `Rust/generic_hash/src/generic_hash.rs`, modifying:
+   Edit `Rust/bridges/generic_hash/src/generic_hash.rs`, modifying:
 
    - `ST_HASH`
    - `ST_PASS`
@@ -105,12 +105,12 @@ Linux, Windows, and macOS.
    Then:
 
    ```
-   cd Rust/generic_hash
+   cd Rust/bridges/generic_hash
    cargo build --release --target x86_64-pc-windows-gnu
    ```
 
    This produces `generic_hash.dll` in
-   `Rust/generic_hash/target/x86_64-pc-windows-gnu/release`.
+   `Rust/bridges/generic_hash/target/x86_64-pc-windows-gnu/release`.
 
 5. **Run Hashcat**
 
@@ -134,8 +134,8 @@ the bridge and the plugin yourself.
    plugin with `cargo build --release`, either:
    - Rename:
      ```
-     mv Rust/generic_hash/target/release/libgeneric_hash.dylib \
-        Rust/generic_hash/target/release/libgeneric_hash.so
+     mv Rust/bridges/generic_hash/target/release/libgeneric_hash.dylib \
+        Rust/bridges/generic_hash/target/release/libgeneric_hash.so
      ```
    - Or run Hashcat with:
      ```
