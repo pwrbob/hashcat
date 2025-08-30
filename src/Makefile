@@ -203,9 +203,11 @@ COMPTIME                := $(shell date +%s)
 
 LFLAGS                  := $(LDFLAGS)
 
+ifneq ($(UNAME),Darwin)
 ifeq ($(MAINTAINER_MODE),0)
 ifeq ($(BUILD_MODE),native)
 CFLAGS                  += -march=native
+endif
 endif
 endif
 

@@ -1864,6 +1864,8 @@ __attribute__((target("avx2")))
 #endif
 size_t hc_memchr_avx2 (const u8 *ptr, int ch, size_t max_len)
 {
+  size_t offset = 0;
+
   while (max_len >= 32)
   {
     #if defined (__aarch64__)
@@ -1879,8 +1881,8 @@ size_t hc_memchr_avx2 (const u8 *ptr, int ch, size_t max_len)
     int mask1      = _mm_movemask_epi8    (cmp1);
     int mask2      = _mm_movemask_epi8    (cmp2);
 
-    if (mask1) return __builtin_ctz       (mask1);
-    if (mask2) return 16 + __builtin_ctz  (mask2);
+    if (mask1) return offset + __builtin_ctz (mask1);
+    if (mask2) return offset + 16 + __builtin_ctz  (mask2);
 
     #else
 
@@ -1890,15 +1892,18 @@ size_t hc_memchr_avx2 (const u8 *ptr, int ch, size_t max_len)
 
     int mask       = _mm256_movemask_epi8 (cmp);
 
-    if (mask != 0) return __builtin_ctz   (mask);
+    if (mask != 0) return offset + __builtin_ctz (mask);
 
     #endif
 
     ptr     += 32;
     max_len -= 32;
+    offset  += 32;
   }
 
-  return hc_memchr_generic (ptr, ch, max_len);
+  size_t tail = hc_memchr_generic (ptr, ch, max_len);
+
+  return offset + tail;
 }
 
 #if !defined (__aarch64__)
@@ -1906,6 +1911,8 @@ __attribute__((target("avx512f,avx512bw")))
 #endif
 size_t hc_memchr_avx512 (const u8 *ptr, int ch, size_t max_len)
 {
+  size_t offset = 0;
+
   while (max_len >= 64)
   {
     #if defined (__aarch64__)
@@ -1924,10 +1931,10 @@ size_t hc_memchr_avx512 (const u8 *ptr, int ch, size_t max_len)
     int mask3      = _mm_movemask_epi8      (_mm_cmpeq_epi8 (block3, nl));
     int mask4      = _mm_movemask_epi8      (_mm_cmpeq_epi8 (block4, nl));
 
-    if (mask1) return __builtin_ctz         (mask1);
-    if (mask2) return 16 + __builtin_ctz    (mask2);
-    if (mask3) return 32 + __builtin_ctz    (mask3);
-    if (mask4) return 48 + __builtin_ctz    (mask4);
+    if (mask1) return offset + __builtin_ctz      (mask1);
+    if (mask2) return offset + 16 + __builtin_ctz (mask2);
+    if (mask3) return offset + 32 + __builtin_ctz (mask3);
+    if (mask4) return offset + 48 + __builtin_ctz (mask4);
 
     #else
 
@@ -1935,15 +1942,18 @@ size_t hc_memchr_avx512 (const u8 *ptr, int ch, size_t max_len)
     __m512i nl     = _mm512_set1_epi8       (ch);
     __mmask64 mask = _mm512_cmpeq_epi8_mask (block, nl);
 
-    if (mask != 0) return __builtin_ctzll   (mask);
+    if (mask != 0) return offset + __builtin_ctzll (mask);
 
     #endif
 
     ptr     += 64;
     max_len -= 64;
+    offset  += 64;
   }
 
-  return hc_memchr_generic (ptr, ch, max_len);
+  size_t tail = hc_memchr_generic (ptr, ch, max_len);
+
+  return offset + tail;
 }
 #endif // __x86_64__ || _M_X64 || __i386__ || _M_IX86 || __aarch64__
 
