@@ -203,6 +203,12 @@ COMPTIME                := $(shell date +%s)
 
 LFLAGS                  := $(LDFLAGS)
 
+ifeq ($(MAINTAINER_MODE),0)
+ifeq ($(BUILD_MODE),native)
+CFLAGS                  += -march=native
+endif
+endif
+
 ifeq ($(PRODUCTION),0)
 CFLAGS                  += -W
 CFLAGS                  += -Wall
