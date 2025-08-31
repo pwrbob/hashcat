@@ -26,6 +26,10 @@
 
 const int GENERIC_PLUGIN_VERSION = GENERIC_PLUGIN_VERSION_REQ;
 
+const int GENERIC_PLUGIN_OPTIONS = GENERIC_PLUGIN_OPTIONS_AUTOHEX
+                                 | GENERIC_PLUGIN_OPTIONS_ICONV
+                                 | GENERIC_PLUGIN_OPTIONS_RULES;
+
 static void error_set (generic_global_ctx_t *global_ctx, const char *fmt, ...)
 {
   global_ctx->error = true;
@@ -38,17 +42,19 @@ static void error_set (generic_global_ctx_t *global_ctx, const char *fmt, ...)
   va_end (ap);
 }
 
-static size_t process_word (const u8 *buf, const size_t len, u8 *out_buf)
+static size_t process_word (const u8 *buf, const size_t len, const u8 **out_buf)
 {
   size_t word_len = len;
 
   while ((word_len > 0) && (buf[word_len - 1] == '\r')) word_len--;
 
-  size_t report_len = MIN (word_len, PW_MAX);
+  //size_t report_len = MIN (word_len, PW_MAX);
 
-  if (report_len) memcpy (out_buf, buf, report_len);
+  //if (report_len) memcpy (out_buf, buf, report_len);
 
-  return report_len;
+  *out_buf = buf;
+
+  return word_len;
 }
 
 bool global_init (MAYBE_UNUSED generic_global_ctx_t *global_ctx, MAYBE_UNUSED generic_thread_ctx_t *thread_ctx, MAYBE_UNUSED hashcat_ctx_t *hashcat_ctx)
@@ -217,7 +223,7 @@ void thread_term (MAYBE_UNUSED generic_global_ctx_t *global_ctx, MAYBE_UNUSED ge
   thread_ctx->thrdata = NULL;
 }
 
-int thread_next (MAYBE_UNUSED generic_global_ctx_t *global_ctx, MAYBE_UNUSED generic_thread_ctx_t *thread_ctx, u8 *out_buf)
+int thread_next (MAYBE_UNUSED generic_global_ctx_t *global_ctx, MAYBE_UNUSED generic_thread_ctx_t *thread_ctx, const u8 **out_buf)
 {
   feed_thread_t *feed_thread = thread_ctx->thrdata;
 
@@ -288,7 +294,7 @@ bool thread_seek (MAYBE_UNUSED generic_global_ctx_t *global_ctx, MAYBE_UNUSED ge
 
     if (remaining == 0)
     {
-      error_set(global_ctx, "Seek past EOF");
+      error_set (global_ctx, "Seek past EOF");
 
       return false;
     }

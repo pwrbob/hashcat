@@ -1,7 +1,10 @@
 use std::os::raw::{c_char, c_int, c_void};
 
 #[unsafe(no_mangle)]
-pub static GENERIC_PLUGIN_VERSION: i32 = 712;
+pub static GENERIC_PLUGIN_OPTIONS: u32 = 0;
+
+#[unsafe(no_mangle)]
+pub static GENERIC_PLUGIN_VERSION: u32 = 712;
 
 #[repr (C)]
 pub struct generic_global_ctx_t
@@ -40,18 +43,33 @@ pub extern "C" fn global_term (_global_ctx: *mut generic_global_ctx_t, _thread_c
 #[unsafe(no_mangle)]
 pub extern "C" fn global_keyspace (_global_ctx: *mut generic_global_ctx_t, _thread_ctx: *mut generic_thread_ctx_t, _hashcat_ctx: *mut c_void) -> u64
 {
-  0xffffffffffffffff
+  0xffff_ffff_ffff_ffff
 }
 
 #[unsafe(no_mangle)]
 pub extern "C" fn thread_init (_global_ctx: *mut generic_global_ctx_t, _thread_ctx: *mut generic_thread_ctx_t) -> bool
 {
+  unsafe
+  {
+    let buf: Box<[u8; 256]> = Box::new ([0; 256]);
+
+    (*_thread_ctx).thrdata = Box::into_raw (buf) as *mut c_void;
+  }
+
   true
 }
 
 #[unsafe(no_mangle)]
 pub extern "C" fn thread_term (_global_ctx: *mut generic_global_ctx_t, _thread_ctx: *mut generic_thread_ctx_t)
 {
+  unsafe
+  {
+    let ptr = (*_thread_ctx).thrdata as *mut [u8; 256];
+
+    let _ = Box::from_raw (ptr);
+
+    (*_thread_ctx).thrdata = std::ptr::null_mut ();
+  }
 }
 
 #[unsafe(no_mangle)]
@@ -61,7 +79,14 @@ pub extern "C" fn thread_seek (_global_ctx: *mut generic_global_ctx_t, _thread_c
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn thread_next (_global_ctx: *mut generic_global_ctx_t, _thread_ctx: *mut generic_thread_ctx_t, _out_buf: *mut u8) -> c_int
+pub extern "C" fn thread_next (_global_ctx: *mut generic_global_ctx_t, _thread_ctx: *mut generic_thread_ctx_t, out_buf: *mut *mut u8) -> c_int
 {
+  unsafe
+  {
+    let buf_ptr = (*_thread_ctx).thrdata as *mut [u8; 256];
+
+    *out_buf = buf_ptr as *mut u8;
+  }
+
   9
 }

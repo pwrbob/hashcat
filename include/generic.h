@@ -8,6 +8,16 @@
 
 #define GENERIC_PLUGIN_VERSION_REQ 712
 
+typedef enum generic_plugin_options
+{
+  GENERIC_PLUGIN_OPTIONS_AUTOHEX   = 1 << 0,
+  GENERIC_PLUGIN_OPTIONS_ICONV     = 1 << 1,
+  GENERIC_PLUGIN_OPTIONS_RULES     = 1 << 2,
+
+  GENERIC_PLUGIN_OPTIONS_UNDEFINED = 0,
+
+} generic_plugin_options_t;
+
 #define HC_LOAD_FUNC_GENERIC(ptr, name, type)                                                \
 do                                                                                           \
 {                                                                                            \
@@ -24,7 +34,7 @@ void generic_global_term     (hashcat_ctx_t *hashcat_ctx);
 u64  generic_global_keyspace (hashcat_ctx_t *hashcat_ctx);
 bool generic_thread_init     (hashcat_ctx_t *hashcat_ctx, const int backend_device_idx);
 void generic_thread_term     (hashcat_ctx_t *hashcat_ctx, const int backend_device_idx);
-int  generic_thread_next     (hashcat_ctx_t *hashcat_ctx, const int backend_device_idx, u8 *out_buf);
+int  generic_thread_next     (hashcat_ctx_t *hashcat_ctx, const int backend_device_idx, const u8 **out_buf);
 bool generic_thread_seek     (hashcat_ctx_t *hashcat_ctx, const int backend_device_idx, const u64 offset);
 
 int  generic_ctx_init        (hashcat_ctx_t *hashcat_ctx);

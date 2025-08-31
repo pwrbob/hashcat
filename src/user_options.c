@@ -1867,7 +1867,7 @@ int user_options_sanity (hashcat_ctx_t *hashcat_ctx)
     }
     else if (user_options->attack_mode == ATTACK_MODE_GENERIC)
     {
-      if (user_options->hc_argc == 1)
+      if (user_options->hc_argc == 2)
       {
         show_error = false;
       }
