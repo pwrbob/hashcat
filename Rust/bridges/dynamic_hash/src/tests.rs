@@ -434,3 +434,13 @@ fn test_pass_salt() {
     let hash = String::from_utf8(ctx.eval(&ast).unwrap()).unwrap();
     assert_eq!(hash, "p@ss:s4lt");
 }
+
+#[test]
+fn test_raw_output_format() {
+    let algoritm = r#"sha1(sha1:raw($p))"#;
+    let ast = parse(algoritm).unwrap();
+    let mut ctx = EvalContext::new();
+    ctx.set_var("p", "qwerty");
+    let hash = String::from_utf8(ctx.eval(&ast).unwrap()).unwrap();
+    assert_eq!(hash, "aa1420f182e88b9e5f874f6fbe7459291e8f4601");
+}

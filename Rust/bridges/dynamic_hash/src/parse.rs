@@ -218,7 +218,7 @@ impl Parser {
         let format = self.parse_ident_name()?;
         match format.as_str() {
             "hex" => Ok((format, OutputFormat::Hex)),
-            "bin" | "binary" => Ok((format, OutputFormat::Binary)),
+            "bin" | "binary" | "raw" => Ok((format, OutputFormat::Binary)),
             "b64" | "base64" => Ok((format, OutputFormat::Base64)),
             _ => Err(ParseError::new(
                 format!("Unsupported output format '{}'", format),
