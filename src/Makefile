@@ -552,9 +552,11 @@ clean:
 	$(RM) -rf feeds/*.dSYM
 	$(RM) -f modules/*.dll
 	$(RM) -f bridges/*.dll
+	$(RM) -f bridges/subs/*.dll
 	$(RM) -f feeds/*.dll
 	$(RM) -f modules/*.so
 	$(RM) -f bridges/*.so
+	$(RM) -f bridges/subs/*.so
 	$(RM) -f feeds/*.so
 	$(RM) -f obj/*/*/*.o
 	$(RM) -f obj/*/*.o
@@ -569,8 +571,8 @@ clean:
 	$(RM) -rf *.induct
 	$(RM) -rf *.outfiles
 	$(RM) -rf kernels
-	$(RM) -rf Rust/generic_hash/target
-	$(RM) -rf Rust/feeds/dummy/target
+	$(RM) -rf Rust/bridges/*/target
+	$(RM) -rf Rust/feeds/*/target
 
 .PHONY: distclean
 distclean: clean

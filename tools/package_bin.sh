@@ -15,8 +15,8 @@ mkdir -p $OUT
 
 mkdir -p $OUT/tools
 mkdir -p $OUT/Python
-mkdir -p $OUT/Rust/generic_hash/target/release
-mkdir -p $OUT/Rust/generic_hash/target/x86_64-pc-windows-gnu/release
+mkdir -p $OUT/Rust/bridges/generic_hash
+mkdir -p $OUT/Rust/bridges/dynamic_hash
 
 cp    $IN/hashcat.exe                   $OUT/
 cp    $IN/hashcat.bin                   $OUT/
@@ -36,11 +36,12 @@ cp    $IN/example.dict                  $OUT/
 cp    $IN/example[0123456789]*.hash     $OUT/
 cp    $IN/example[0123456789]*.cmd      $OUT/
 cp -r $IN/Python/*.py                   $OUT/Python/
-cp -r $IN/Rust/generic_hash/src         $OUT/Rust/generic_hash/
-cp    $IN/Rust/generic_hash/Cargo.*     $OUT/Rust/generic_hash/
-cp    $IN/Rust/generic_hash/build.rs    $OUT/Rust/generic_hash/
-cp    $IN/Rust/generic_hash/target/release/*.so $OUT/Rust/generic_hash/target/release/
-cp    $IN/Rust/generic_hash/target/x86_64-pc-windows-gnu/release/*.dll $OUT/Rust/generic_hash/target/x86_64-pc-windows-gnu/release/
+cp -r $IN/Rust/bridges/generic_hash/src         $OUT/Rust/bridges/generic_hash/
+cp    $IN/Rust/bridges/generic_hash/Cargo.*     $OUT/Rust/bridges/generic_hash/
+cp    $IN/Rust/bridges/generic_hash/build.rs    $OUT/Rust/bridges/generic_hash/
+cp -r $IN/Rust/bridges/dynamic_hash/src         $OUT/Rust/bridges/dynamic_hash/
+cp    $IN/Rust/bridges/dynamic_hash/Cargo.*     $OUT/Rust/bridges/dynamic_hash/
+cp    $IN/Rust/bridges/dynamic_hash/build.rs    $OUT/Rust/bridges/dynamic_hash/
 cp -r $IN/OpenCL                        $OUT/
 cp    $IN/tools/*hashcat.pl             $OUT/tools/
 cp    $IN/tools/*hashcat.py             $OUT/tools/
@@ -93,6 +94,8 @@ chmod 755 $OUT/masks
 chmod 644 $OUT/masks/*
 chmod 755 $OUT/bridges
 chmod 644 $OUT/bridges/*
+chmod 755 $OUT/bridges/subs
+chmod 644 $OUT/bridges/subs/*
 chmod 755 $OUT/feeds
 chmod 644 $OUT/feeds/*
 chmod 755 $OUT/modules
