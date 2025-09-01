@@ -15,7 +15,9 @@ const SUPPORTED_ALGORITHMS: &[&str] = &[
     "b64dec",
     "b64decode",
     "upper",
+    "uc",
     "lower",
+    "lc",
     "cut",
     "md4",
     "md5",
@@ -294,7 +296,9 @@ impl Parser {
                     "b64dec",
                     "b64decode",
                     "upper",
+                    "uc",
                     "lower",
+                    "lc",
                     "cut",
                 ]
                 .contains(&name.as_str())

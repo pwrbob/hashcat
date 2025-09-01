@@ -414,3 +414,12 @@ fn test_whitespace() {
         "$2b$12$iyvX.kDndyq/YiUvv7J.NePApguNMJG65lr2k7H0A7Y3d7LLc1tOS:"
     );
 }
+
+#[test]
+fn test_lc_uc() {
+    let algoritm = r#"lc("UPPER").uc("lower")"#;
+    let ast = parse(algoritm).unwrap();
+    let ctx = EvalContext::new();
+    let hash = String::from_utf8(ctx.eval(&ast).unwrap()).unwrap();
+    assert_eq!(hash, "upperLOWER");
+}

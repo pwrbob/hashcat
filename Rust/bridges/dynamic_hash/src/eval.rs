@@ -65,8 +65,8 @@ impl EvalContext {
                 }
 
                 Ok(match name.as_str() {
-                    "upper" => data.to_ascii_uppercase(),
-                    "lower" => data.to_ascii_lowercase(),
+                    "upper" | "uc" => data.to_ascii_uppercase(),
+                    "lower" | "lc" => data.to_ascii_lowercase(),
                     "hex" => Vec::from(hex::encode(data)),
                     "unhex" => hex::decode(data).map_err(|e| e.to_string())?,
                     "b64" | "base64" => Vec::from(BASE64_STANDARD.encode(data)),
