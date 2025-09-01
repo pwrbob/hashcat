@@ -28,7 +28,7 @@ endif
 
 COMMON_PREREQS  := src/bridges/bridge_rust_generic_hash.c src/cpu_features.c
 RUST_CRATES     := $(notdir $(patsubst %/Cargo.toml,%,$(subst \,/,$(wildcard $(RUST_SCAN_DIR)/*/Cargo.toml))))
-PLUGINS_LINUX   := $(addprefix $(RUST_SUBS_DIR)/lib,$(addsuffix .so,$(RUST_CRATES)))
+PLUGINS_LINUX   := $(addprefix $(RUST_SUBS_DIR)/,$(addsuffix .so,$(RUST_CRATES)))
 PLUGINS_WIN     := $(addprefix $(RUST_SUBS_DIR)/,$(addsuffix .dll,$(RUST_CRATES)))
 PLUGINS_DEFAULT := $(PLUGINS_LINUX)
 
@@ -41,7 +41,7 @@ RESET := $(shell tput sgr 0)
 
 ifeq ($(CARGO_PRESENT),true)
 
-$(RUST_SUBS_DIR)/lib%.so: $(RUST_SCAN_DIR)/%/Cargo.toml
+$(RUST_SUBS_DIR)/%.so: $(RUST_SCAN_DIR)/%/Cargo.toml
 	$(RUST_CARGO) build --quiet $(RUST_MODE_FLAG) --manifest-path $^
 	cp Rust/bridges/$*/target/$(RUST_BUILD_MODE)/lib$*.$(RUST_LIB_EXT) $@
 ifeq ($(RUSTUP_PRESENT),true)
@@ -61,7 +61,7 @@ endif
 
 else
 
-$(RUST_SUBS_DIR)/lib%.so: $(RUST_SCAN_DIR)/%/Cargo.toml
+$(RUST_SUBS_DIR)/%.so: $(RUST_SCAN_DIR)/%/Cargo.toml
 	@echo ""
 	@echo "$(RED)WARNING$(RESET): Skipping regular plugin 74000: rustup not found."
 	@echo "         To use it, you must install Rust."

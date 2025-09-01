@@ -39,13 +39,9 @@ cp -r $IN/Python/*.py                   $OUT/Python/
 cp -r $IN/Rust/bridges/generic_hash/src         $OUT/Rust/bridges/generic_hash/
 cp    $IN/Rust/bridges/generic_hash/Cargo.*     $OUT/Rust/bridges/generic_hash/
 cp    $IN/Rust/bridges/generic_hash/build.rs    $OUT/Rust/bridges/generic_hash/
-cp    $IN/Rust/bridges/generic_hash/target/release/*.so $OUT/bridges/subs/
-cp    $IN/Rust/bridges/generic_hash/target/x86_64-pc-windows-gnu/release/*.dll $OUT/bridges/subs/
 cp -r $IN/Rust/bridges/dynamic_hash/src         $OUT/Rust/bridges/dynamic_hash/
 cp    $IN/Rust/bridges/dynamic_hash/Cargo.*     $OUT/Rust/bridges/dynamic_hash/
 cp    $IN/Rust/bridges/dynamic_hash/build.rs    $OUT/Rust/bridges/dynamic_hash/
-cp    $IN/Rust/bridges/dynamic_hash/target/release/*.so $OUT/bridges/subs/
-cp    $IN/Rust/bridges/dynamic_hash/target/x86_64-pc-windows-gnu/release/*.dll $OUT/bridges/subs/
 cp -r $IN/OpenCL                        $OUT/
 cp    $IN/tools/*hashcat.pl             $OUT/tools/
 cp    $IN/tools/*hashcat.py             $OUT/tools/

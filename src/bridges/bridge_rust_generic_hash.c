@@ -192,7 +192,7 @@ static char *DEFAULT_DYNLIB_FILENAME = "./Rust/bridges/generic_hash/target/x86_6
 static char *DEFAULT_DYNLIB_FILENAME_FALLBACK = "./bridges/subs/generic_hash.dll";
 #else
 static char *DEFAULT_DYNLIB_FILENAME = "./Rust/bridges/generic_hash/target/release/libgeneric_hash.so";
-static char *DEFAULT_DYNLIB_FILENAME_FALLBACK = "./bridges/subs/libgeneric_hash.so";
+static char *DEFAULT_DYNLIB_FILENAME_FALLBACK = "./bridges/subs/generic_hash.so";
 #endif
 
 void *platform_init(user_options_t *user_options)
