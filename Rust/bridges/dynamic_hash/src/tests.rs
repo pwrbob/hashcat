@@ -444,3 +444,13 @@ fn test_raw_output_format() {
     let hash = String::from_utf8(ctx.eval(&ast).unwrap()).unwrap();
     assert_eq!(hash, "aa1420f182e88b9e5f874f6fbe7459291e8f4601");
 }
+
+#[test]
+fn test_md2() {
+    let algoritm = "md2(cut(0,0,$p))";
+    let ast = parse(algoritm).unwrap();
+    let mut ctx = EvalContext::new();
+    ctx.set_var("p", "qwerty");
+    let hash = String::from_utf8(ctx.eval(&ast).unwrap()).unwrap();
+    assert_eq!(hash, "8350e5a3e24c153df2275c9f80692773");
+}

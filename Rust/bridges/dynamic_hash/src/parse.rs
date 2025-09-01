@@ -19,6 +19,7 @@ const SUPPORTED_ALGORITHMS: &[&str] = &[
     "lower",
     "lc",
     "cut",
+    "md2",
     "md4",
     "md5",
     "sha1",

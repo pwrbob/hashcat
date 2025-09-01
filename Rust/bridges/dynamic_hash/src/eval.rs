@@ -8,6 +8,7 @@ use crate::{DataDecoder, Expr, ExtraParams, OutputFormat};
 
 use base64::{Engine, prelude::BASE64_STANDARD};
 use hmac::{Hmac, Mac};
+use md2::Md2;
 use md4::Md4;
 use md5::{Digest, Md5};
 use sha1::Sha1;
@@ -79,6 +80,7 @@ impl EvalContext {
                         BASE64_STANDARD.decode(data).map_err(|e| e.to_string())?
                     }
 
+                    "md2" => digest!(Md2),
                     "md4" => digest!(Md4),
                     "md5" => digest!(Md5),
                     "sha1" => digest!(Sha1),
