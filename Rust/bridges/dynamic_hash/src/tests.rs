@@ -36,12 +36,12 @@ fn test_bcrypt_param_order() {
 
 #[test]
 fn test_bcrypt_variables() {
-    let algoritm = "bcrypt(cost=$cost,salt=$salt,$pass)";
+    let algoritm = "bcrypt(cost=$cost,salt=$mysalt,$mypass)";
     let ast = parse(algoritm).unwrap();
     let mut ctx = EvalContext::new();
     ctx.set_var("cost", "4");
-    ctx.set_var("salt", "zhVYF6gIwKr7Eaxd6pGQ8O");
-    ctx.set_var("pass", "pass");
+    ctx.set_var("mysalt", "zhVYF6gIwKr7Eaxd6pGQ8O");
+    ctx.set_var("mypass", "pass");
     let hash = String::from_utf8(ctx.eval(&ast).unwrap()).unwrap();
     assert_eq!(
         hash,
@@ -422,4 +422,15 @@ fn test_lc_uc() {
     let ctx = EvalContext::new();
     let hash = String::from_utf8(ctx.eval(&ast).unwrap()).unwrap();
     assert_eq!(hash, "upperLOWER");
+}
+
+#[test]
+fn test_pass_salt() {
+    let algoritm = r#"$pass.":".$salt"#;
+    let ast = parse(algoritm).unwrap();
+    let mut ctx = EvalContext::new();
+    ctx.set_var("p", "p@ss");
+    ctx.set_var("s", "s4lt");
+    let hash = String::from_utf8(ctx.eval(&ast).unwrap()).unwrap();
+    assert_eq!(hash, "p@ss:s4lt");
 }

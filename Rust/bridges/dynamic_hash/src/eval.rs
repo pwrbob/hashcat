@@ -27,7 +27,12 @@ impl EvalContext {
     }
 
     pub fn var(&self, name: impl AsRef<str>) -> Option<Vec<u8>> {
-        self.0.get(name.as_ref()).map(Vec::clone)
+        let name = match name.as_ref() {
+            "pass" => "p",
+            "salt" => "s",
+            other => other,
+        };
+        self.0.get(name).map(Vec::clone)
     }
 
     fn eval_number(&self, expr: &Expr) -> Result<u32, String> {
