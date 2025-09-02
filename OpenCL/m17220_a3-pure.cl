@@ -90,7 +90,7 @@ Related publication: https://scitepress.org/PublicationsDetail.aspx?ID=KLPzPqStp
 #include M2S(INCLUDE_PATH/inc_platform.cl)
 #include M2S(INCLUDE_PATH/inc_common.cl)
 #include M2S(INCLUDE_PATH/inc_simd.cl)
-#include M2S(INCLUDE_PATH/inc_checksum_crc32.cl)
+#include M2S(INCLUDE_PATH/inc_checksum_crc.cl)
 
 #define MAX_LOCAL 512 // too much leaves no room for compiler optimizations, simply benchmark to find a good trade-off - make it as big as possible
 #define TMPSIZ    (2 * TINFL_LZ_DICT_SIZE)

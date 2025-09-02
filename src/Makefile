@@ -203,6 +203,14 @@ COMPTIME                := $(shell date +%s)
 
 LFLAGS                  := $(LDFLAGS)
 
+ifneq ($(UNAME),Darwin)
+ifeq ($(MAINTAINER_MODE),0)
+ifeq ($(BUILD_MODE),native)
+CFLAGS                  += -march=native
+endif
+endif
+endif
+
 ifeq ($(PRODUCTION),0)
 CFLAGS                  += -W
 CFLAGS                  += -Wall
@@ -469,7 +477,7 @@ EMU_OBJS_ALL            += emu_inc_hash_md4 emu_inc_hash_md5 emu_inc_hash_ripemd
 EMU_OBJS_ALL            += emu_inc_cipher_aes emu_inc_cipher_camellia emu_inc_cipher_des emu_inc_cipher_kuznyechik emu_inc_cipher_serpent emu_inc_cipher_twofish
 EMU_OBJS_ALL            += emu_inc_hash_base58
 
-OBJS_ALL                := affinity autotune backend benchmark bitmap bitops bridges combinator common convert cpt cpu_crc32 debugfile dictstat dispatch dynloader event ext_ADL ext_cuda ext_hip ext_nvapi ext_nvml ext_nvrtc ext_hiprtc ext_OpenCL ext_sysfs_amdgpu ext_sysfs_intelgpu ext_sysfs_cpu ext_lzma filehandling folder hashcat hashes hlfmt hwmon induct interface keyboard_layout locking logfile loopback memory monitor mpsp outfile_check outfile pidfile potfile restore rp rp_cpu selftest slow_candidates shared status stdout straight generic terminal thread timer tuningdb usage user_options wordlist $(EMU_OBJS_ALL)
+OBJS_ALL                := affinity autotune backend benchmark bitmap bitops bridges combinator common convert cpt cpu_crc32 cpu_features debugfile dictstat dispatch dynloader event ext_ADL ext_cuda ext_hip ext_nvapi ext_nvml ext_nvrtc ext_hiprtc ext_OpenCL ext_sysfs_amdgpu ext_sysfs_intelgpu ext_sysfs_cpu ext_lzma filehandling folder hashcat hashes hlfmt hwmon induct interface keyboard_layout locking logfile loopback memory monitor mpsp outfile_check outfile pidfile potfile restore rp rp_cpu selftest slow_candidates shared status stdout straight generic terminal thread timer tuningdb usage user_options wordlist $(EMU_OBJS_ALL)
 
 ifeq ($(ENABLE_BRAIN),1)
 OBJS_ALL                += brain
@@ -544,9 +552,11 @@ clean:
 	$(RM) -rf feeds/*.dSYM
 	$(RM) -f modules/*.dll
 	$(RM) -f bridges/*.dll
+	$(RM) -f bridges/subs/*.dll
 	$(RM) -f feeds/*.dll
 	$(RM) -f modules/*.so
 	$(RM) -f bridges/*.so
+	$(RM) -f bridges/subs/*.so
 	$(RM) -f feeds/*.so
 	$(RM) -f obj/*/*/*.o
 	$(RM) -f obj/*/*.o
@@ -561,8 +571,8 @@ clean:
 	$(RM) -rf *.induct
 	$(RM) -rf *.outfiles
 	$(RM) -rf kernels
-	$(RM) -rf Rust/generic_hash/target
-	$(RM) -rf Rust/feeds/dummy/target
+	$(RM) -rf Rust/bridges/*/target
+	$(RM) -rf Rust/feeds/*/target
 
 .PHONY: distclean
 distclean: clean

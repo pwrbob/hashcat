@@ -400,6 +400,37 @@ void pw_base_add (hc_device_param_t *device_param, pw_pre_t *pw_pre)
   }
 }
 
+void pw_add_zerocopy (hc_device_param_t *device_param, u8 *out_buf, const int pw_len)
+{
+  if (device_param->pws_cnt < device_param->kernel_power)
+  {
+    pw_idx_t *pw_idx = device_param->pws_idx + device_param->pws_cnt;
+
+    const u32 pw_len4 = (pw_len + 3) & ~3; // round up to multiple of 4
+
+    const u32 pw_len4_cnt = pw_len4 / 4;
+
+    pw_idx->cnt = pw_len4_cnt;
+    pw_idx->len = pw_len;
+
+    memset (out_buf + pw_len, 0, pw_len4 - pw_len);
+
+    // prepare next element
+
+    pw_idx_t *pw_idx_next = pw_idx + 1;
+
+    pw_idx_next->off = pw_idx->off + pw_idx->cnt;
+
+    device_param->pws_cnt++;
+  }
+  else
+  {
+    fprintf (stderr, "BUG pw_add_zerocopy()!!\n");
+
+    return;
+  }
+}
+
 void pw_add (hc_device_param_t *device_param, const u8 *pw_buf, const int pw_len)
 {
   if (device_param->pws_cnt < device_param->kernel_power)

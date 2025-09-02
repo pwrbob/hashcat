@@ -98,7 +98,7 @@ RUN tar -xf mingw-w64-x86_64-python-3.12.10-1-any.pkg.tar
 
 WORKDIR /root
 
-COPY docker/patches/ /root/patches/
+COPY docker/patches/ubuntu20/ /root/patches/
 
 RUN git clone https://github.com/hashcat/hashcat.git
 

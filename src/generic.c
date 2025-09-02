@@ -102,7 +102,7 @@ void generic_thread_term (hashcat_ctx_t *hashcat_ctx, const int device_id)
   }
 }
 
-int generic_thread_next (hashcat_ctx_t *hashcat_ctx, const int device_id, u8 *out_buf)
+int generic_thread_next (hashcat_ctx_t *hashcat_ctx, const int device_id, const u8 **out_buf)
 {
   generic_ctx_t *generic_ctx = hashcat_ctx->generic_ctx;
 
@@ -151,11 +151,12 @@ int generic_ctx_init (hashcat_ctx_t *hashcat_ctx)
   if (user_options->show         == true) return 0;
   if (user_options->version      == true) return 0;
 
-  if (user_options->attack_mode  == ATTACK_MODE_STRAIGHT) return 0;
-  if (user_options->attack_mode  == ATTACK_MODE_COMBI)    return 0;
-  if (user_options->attack_mode  == ATTACK_MODE_BF)       return 0;
-  if (user_options->attack_mode  == ATTACK_MODE_HYBRID1)  return 0;
-  if (user_options->attack_mode  == ATTACK_MODE_HYBRID2)  return 0;
+  if (user_options->attack_mode  == ATTACK_MODE_STRAIGHT)     return 0;
+  if (user_options->attack_mode  == ATTACK_MODE_COMBI)        return 0;
+  if (user_options->attack_mode  == ATTACK_MODE_BF)           return 0;
+  if (user_options->attack_mode  == ATTACK_MODE_HYBRID1)      return 0;
+  if (user_options->attack_mode  == ATTACK_MODE_HYBRID2)      return 0;
+  if (user_options->attack_mode  == ATTACK_MODE_ASSOCIATION)  return 0;
 
   generic_ctx->enabled = true;
 
@@ -169,10 +170,39 @@ int generic_ctx_init (hashcat_ctx_t *hashcat_ctx)
 
   if (generic_ctx->lib == NULL)
   {
-    event_log_error (hashcat_ctx, "Can't open: %s: %s", generic_ctx->dynlib_filename, hc_dlerror ());
+    event_log_error (hashcat_ctx, "%s", hc_dlerror ());
 
     return -1;
   }
+
+  const int *generic_plugin_version = (const int *) hc_dlsym (generic_ctx->lib, "GENERIC_PLUGIN_VERSION");
+
+  if (generic_plugin_version == NULL)
+  {
+    event_log_error (hashcat_ctx, "%s", hc_dlerror ());
+
+    return -1;
+  }
+
+  if (GENERIC_PLUGIN_VERSION_REQ > *generic_plugin_version)
+  {
+    event_log_error (hashcat_ctx, "%s: Plugin version is outdated: %d > %d", generic_ctx->dynlib_filename, GENERIC_PLUGIN_VERSION_REQ, *generic_plugin_version);
+
+    return -1;
+  }
+
+  const generic_plugin_options_t *generic_plugin_options = (const generic_plugin_options_t *) hc_dlsym (generic_ctx->lib, "GENERIC_PLUGIN_OPTIONS");
+
+  if (generic_plugin_options == NULL)
+  {
+    event_log_error (hashcat_ctx, "%s", hc_dlerror ());
+
+    return -1;
+  }
+
+  generic_ctx->autohex_enable = (*generic_plugin_options & GENERIC_PLUGIN_OPTIONS_AUTOHEX) ? true : false;
+  generic_ctx->iconv_enable   = (*generic_plugin_options & GENERIC_PLUGIN_OPTIONS_ICONV)   ? true : false;
+  generic_ctx->rules_enable   = (*generic_plugin_options & GENERIC_PLUGIN_OPTIONS_RULES)   ? true : false;
 
   HC_LOAD_FUNC_GENERIC (generic_ctx, global_init,     GENERIC_GLOBAL_INIT);
   HC_LOAD_FUNC_GENERIC (generic_ctx, global_term,     GENERIC_GLOBAL_TERM);

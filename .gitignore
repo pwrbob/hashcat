@@ -22,6 +22,8 @@ seekdbs/**
 lib/*.a
 bridges/*.dll
 bridges/*.so
+bridges/subs/*.dll
+bridges/subs/*.so
 modules/*.dll
 modules/*.so
 feeds/*.dll
@@ -34,7 +36,7 @@ tools/luks_tests
 .vscode
 test_edge*
 Rust/feeds/*/target
-Rust/*/target
+Rust/bridges/*/target
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
