@@ -49,10 +49,9 @@ const char *module_st_pass        (MAYBE_UNUSED const hashconfig_t *hashconfig, 
 typedef struct keepass4
 {
   u32 masterseed[8];
+  u32 header[64];
 
-  u32 header_len;
-  u32 header[128];
-
+  /* key-file handling */
   u32 keyfile_len;
   u32 keyfile[8];
 
@@ -248,9 +247,9 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
   salt->salt_len = hex_decode ((const u8 *) salt_pos, salt_len, (u8 *) salt->salt_buf);
 
   // 9. header
-  keepass4->header_len = token.len[9];
+  const int header_len = token.len[9];
   const u8 *header_pos = token.buf[9];
-  hex_decode ((const u8 *) header_pos, keepass4->header_len, (u8 *) keepass4->header);
+  hex_decode ((const u8 *) header_pos, header_len, (u8 *) keepass4->header);
 
   // 10. headerhmac (digest): digest/ target hash
   const int digest_len = token.len[10];
