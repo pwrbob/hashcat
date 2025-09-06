@@ -332,13 +332,15 @@ endif
 # OpenCL
 CFLAGS                  += -I$(DEPS_OPENCL_PATH)
 
-# brain and xxHash
+# brain
 ifeq ($(ENABLE_BRAIN),1)
 CFLAGS                  += -DWITH_BRAIN
+endif
+
+# xxHash
 CFLAGS                  += -I$(DEPS_XXHASH_PATH)
 ifeq ($(USE_SYSTEM_XXHASH),1)
 LFLAGS                  += -lxxhash
-endif
 endif
 
 # CUDA binary cache
