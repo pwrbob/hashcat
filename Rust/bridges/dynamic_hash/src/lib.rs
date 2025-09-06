@@ -9,7 +9,6 @@
     non_upper_case_globals
 )]
 mod bindings;
-mod dynamic_hash;
 mod eval;
 mod interop;
 mod parse;
