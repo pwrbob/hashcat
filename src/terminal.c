@@ -424,13 +424,17 @@ static void keypress (hashcat_ctx_t *hashcat_ctx)
   tty_fix ();
 }
 
+#if defined (_WIN32) || defined (__WIN32__)
+HC_API_CALL DWORD thread_keypress (void *p)
+#else
 HC_API_CALL void *thread_keypress (void *p)
+#endif
 {
   hashcat_ctx_t *hashcat_ctx = (hashcat_ctx_t *) p;
 
   keypress (hashcat_ctx);
 
-  return NULL;
+  return 0;
 }
 
 #if defined (_WIN)
