@@ -5,36 +5,26 @@
 
 ## General
 
-The generic attack mode was created to support advanced password candidate generators. But what is an advanced password generator? 
+The new attack mode 8 is similar to the assimilation bridge in that we have added a standardized interface that allows users to easily add new functions and extend the customization of hashcat. Unlike the assimilation bridge, which operates on the output channel, this plugin interface operates on the input channel, the password candidate generator side.
 
-We define it first by a generator that can do more than the embedded attack-mode in hashcat, which are mostly designed so that they work best on a GPU. In hashcat we have generators which do simply reading a wordlist and applying rules, or generating a virtual wordlist from a mask, and combinations out of this. the reason for the simple generators in hashcat is because they allow for a multiplier logic, so we can gain a maximum performance even for fast hashes. But for fast hashes it might be not so relevant to extreme fast candidate generation, and other features become more relevant. So everything that falls out of the existing candidate generator logic is an advanced generator.
+Such generators are often implemented as standalone tools and connected to hashcat through the stdin interface. However, that approach comes with limitations and bottlenecks, which are discussed in the user guide: `docs/hashcat-generic-attack-mode.md`. If you have not read it yet, start there.
 
-Examples of advanced generators include:
-
-- AI-driven candidate generation
-- Reading data from a network stream
-- Statistical models that adapt dynamically
-- Logic-based systems for contextualized passwords
-- Your ideas
-
-Such generators are often implemented as standalone tools and connected to Hashcat through the stdin interface. However, that approach comes with limitations and bottlenecks, which are discussed in the user guide: docs/hashcat-generic-attack-mode.md. If you have not read it yet, start there.
-
-This document explains how to add your own “feed” to be used with attack mode 8.
+This document explains how to add your own "feed" to be used with attack mode 8.
 
 ## What is a Feed?
 
-A feed is a dynamically loaded library (.so, .dll, .dylib) that Hashcat loads at startup. Attack mode 8 itself does not provide generator logic. Instead, the user selects a feed by specifying its filename as the first parameter on the command line.
+From a technical perspective, a feed is a dynamically loaded library (`.so`, `.dll`, `.dylib`) that hashcat loads at startup. Attack mode 8 itself does not provide generator logic. Instead, the user selects a feed by specifying its filename as the first parameter on the command line.
 
 This open design allows for:
 
-- An unlimited number of plugins that can ship with Hashcat core
+- An unlimited number of plugins that can ship with hashcat core
 - Custom feeds for specialized workflows or client requirements
 
 ## Example Feeds
 
 We provide two sample feeds:
 
-1. feed_wordlist
+1. `feed_wordlist`
 
 	- A simple wordlist loader, similar to -a 0
 	- Does not support loading from folders
@@ -42,7 +32,7 @@ We provide two sample feeds:
 	- Uses a seek database instead of the traditional dictstat file, allowing efficient random access without repeatedly calling next()
 	- Especially beneficial on multi-GPU systems
 
-2. rust_dummy
+2. `rust_dummy`
 
 	- A skeleton implementation written in Rust
 	- Demonstrates two things:
@@ -51,9 +41,9 @@ We provide two sample feeds:
 
 ## Design Philosophy
 
-The interface was intentionally designed to be as simple and straightforward as possible. This allows you to focus on generating high-quality password candidates without needing deep knowledge of Hashcat internals. The simplicity also makes it easy to integrate with code-generation tools or AI assistants.
+The interface was intentionally designed to be as simple and straightforward as possible. This allows you to focus on generating high-quality password candidates without needing deep knowledge of hashcat internals. The simplicity also makes it easy to integrate with code-generation tools or AI assistants.
 
-Early experiments showed success reimplementing legacy Hashcat attacks such as -a 2 (permutation attack) and -a 5 (table attack).
+Early experiments showed success reimplementing legacy hashcat attacks such as -a 2 (permutation attack) and -a 5 (table attack).
 
 ## Required Functions
 
@@ -65,7 +55,7 @@ There are seven functions you can implement. In theory, only one thread_next() i
 int thread_next (generic_global_ctx_t *global_ctx, generic_thread_ctx_t *thread_ctx, const u8 **out_buf)
 ```
 
-This function is called whenever Hashcat needs the next password candidate. You must set the output buffer pointer and return the length of the candidate. The two custom data types are simple structures holding only basic primitives.
+This function is called whenever hashcat needs the next password candidate. You must set the output buffer pointer and return the length of the candidate. The two custom data types are simple structures holding only basic primitives.
 
 ### Full Function Set
 
@@ -81,7 +71,7 @@ bool thread_seek     (generic_global_ctx_t *global_ctx, generic_thread_ctx_t *th
 
 ## Global vs Thread Context
 
-Hashcat supports compute devices of very different performance levels. For example, a session may include one CPU and five GPUs, each with different speeds. To feed each device efficiently, Hashcat creates a separate thread per device.
+Hashcat supports compute devices of very different performance levels. For example, a session may include one CPU and five GPUs, each with different speeds. To feed each device efficiently, hashcat creates a separate thread per device.
 
 This is why there are two context structures:
 
@@ -111,3 +101,6 @@ Unlike feeding candidates over stdin, attack mode 8 allows:
 - The option for each thread to open its own resources (files, sockets, databases)
 - Higher performance and scalability
 
+## Skeleton
+
+TBD
