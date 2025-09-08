@@ -40,8 +40,7 @@ create_luks_container() {
   shift 6
   local extra_opts=("$@")
 
-
-  # echo  "🔧 Creating $filename (size ${size_mb}MiB) with password length ${#PASSWORD}: $PASSWORD..."
+  echo  "🔧 Creating $filename (size ${size_mb}MiB) with password length ${#PASSWORD}: $PASSWORD..." >> /tmp/m34100.sh
   dd if=/dev/zero of="$filename" bs=1M count="$size_mb" status=none
 
   loopdev=$(sudo losetup --show -f "$filename")
@@ -56,7 +55,6 @@ sudo cryptsetup luksFormat \
 ${extra_opts:+${extra_opts[@]}} \
 "$loopdev" <<< "$PASSWORD" # $filename
 EOF
-chmod +x /tmp/m34100.sh.log
 
   if sudo cryptsetup luksFormat \
       --batch-mode \
@@ -92,25 +90,23 @@ chmod +x /tmp/m34100.sh.log
     return
   fi
 
-  mkfs.ext4 -q /dev/mapper/"$name" 2>/dev/null
+  sudo mkfs.ext4 -q /dev/mapper/"$name" 2>> /tmp/m34100.sh
 
   mount_point="$MOUNT_DIR/$name"
   mkdir -p "$mount_point"
   sudo mount /dev/mapper/"$name" "$mount_point"
 
-  echo "Hello from $filename" > "$mount_point/info.txt"
+  sudo sh -c 'echo "Hello from $filename" > "$mount_point/info.txt"'
   while ! sudo umount "$mount_point"; do
     # echo  "Waiting for $mount_point to become free..."
     sleep 1
   done
-
   sudo cryptsetup close "$name"
 
-  # echo  "✅ ext4: $filename"
+  echo  "✅ ext4: $filename" >> /tmp/m34100.sh
 
   sudo losetup -D
 }
-
 
 # --- random picks ---
 kdf=${ARGON_KDFS[$RANDOM % ${#ARGON_KDFS[@]}]}
@@ -131,7 +127,6 @@ create_luks_container "$password" "$file" luks2 "$cipher" sha256 "$size" \
   --pbkdf-memory "$((memory * 1024))" \
   --pbkdf-parallel "$threads"
 
-
 ${TDIR}/luks2hashcat.py $file | grep -vE '^[0-9]+$' > $file.hash
 
-echo $file.hash
+echo "$file.hash"

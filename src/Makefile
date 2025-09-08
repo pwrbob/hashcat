@@ -569,6 +569,7 @@ distclean: clean
 	$(RM) -f brain.*
 	$(RM) -rf test_[0-9]*
 	$(RM) -rf tools/luks_tests
+	$(RM) -rf tools/luks2_tests
 
 ##
 ## Targets: Linux install

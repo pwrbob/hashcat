@@ -22,7 +22,7 @@ pyenv local $(pyenv install --list | grep -E "^\s*3\.[0-9]+\.[0-9]$" | tail -n 1
 pip install --upgrade pip'
 
 # Enable LUKS2 on-the-fly crypto-container generation
-sudo apt install cryptsetup 
+sudo apt install cryptsetup
 
 ./install_modules.sh
 ```
