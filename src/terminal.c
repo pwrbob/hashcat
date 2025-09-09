@@ -959,6 +959,17 @@ void hash_info_single (hashcat_ctx_t *hashcat_ctx, user_options_extra_t *user_op
 
     event_log_info (hashcat_ctx, "  Deprecated.Notice...: %s", t_deprecated_notice);
 
+
+    char *t_module_comment = "N/A";
+
+    if (module_ctx->module_comment != MODULE_DEFAULT)
+    {
+      t_module_comment = (char *) module_ctx->module_comment (hashconfig, hashcat_ctx->user_options, user_options_extra);
+    }
+
+    event_log_info (hashcat_ctx, "  Module.Comment......: %s", t_module_comment);
+
+
     char *t_pw_desc = "plain";
     if (hashconfig->opts_type & OPTS_TYPE_PT_HEX) t_pw_desc = "HEX";
     else if (hashconfig->opts_type & OPTS_TYPE_PT_BASE58) t_pw_desc = "BASE58";
