@@ -186,7 +186,7 @@ function init()
     return 0
   fi
 
-  if is_in_array "$hash_type" "${LUKS_MODES[@]}" || { is_in_array "$hash_type" "${LUKS2_MODES[@]}" && [[ "${GENERATE_CONTAINERS}" -eq 0 ]] }; then
+  if is_in_array "$hash_type" ${LUKS_MODES} || { is_in_array "$hash_type" ${LUKS2_MODES} && [[ "${GENERATE_CONTAINERS}" -eq 0 ]] }; then
     which 7z &>/dev/null
     if [ $? -eq 1 ]; then
       echo "ATTENTION: 7z is missing. Skipping download and extract luks test files."
