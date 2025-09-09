@@ -3703,10 +3703,7 @@ function luks2_test()
 
   chmod u+x "${TDIR}/luks2hashcat.py"
 
-  mkdir -p "${OUTD}/luks2_tests"
-  cp -r "${TDIR}/luks2_tests/." "${OUTD}/luks2_tests"
-
-  for luks2File in $(ls ${OUTD}/luks2_tests | grep "img$"); do #| grep ${hashType}
+  for luks2File in $(ls ${TDIR}/luks2_tests | grep "img$"); do
     luksMainMask="?l"
     luksMask="${luksMainMask}"
 
@@ -3715,6 +3712,8 @@ function luks2_test()
     luksPassPartFile2="${OUTD}/${hashType}_dict2"
 
     luksContainer="${TDIR}/luks2_tests/${luks2File}"
+
+    mkdir -p "${OUTD}/luks2_tests"
     luksHashFile="${OUTD}/luks2_tests/${luks2File}.hash"
 
     case $attackType in
@@ -3754,7 +3753,6 @@ function luks2_test()
 
     eval \"${TDIR}/luks2hashcat.py\" \"${luksContainer}\" > "${luksHashFile}"
 
-    # luksMode="${luksHash}-${luksCipher}-${luksMode}-${luksKeySize}"
     luksMode="$(basename "$luksContainer" .img)"
 
     if [ -n "${CMD}" ] && [ ${#CMD} -gt 5 ]; then
@@ -4400,6 +4398,7 @@ if [ "${PACKAGE}" -eq 1 ]; then
   cp "${BASH_SOURCE[0]}" "${OUTD}/test.sh"
 
   copy_luks_dir=0
+  copy_luks2_dir=0
   copy_tc_dir=0
   copy_vc_dir=0
   copy_cl_dir=0
@@ -4414,7 +4413,7 @@ if [ "${PACKAGE}" -eq 1 ]; then
     for TMP_HT in $(seq "${HT_MIN}" "${HT_MAX}"); do
       if is_in_array "${TMP_HT}" ${LUKS_MODES}; then
         copy_luks_dir=1
-      elif is_in_array "${TMP_HT}" ${LUKS2_MODES} && [[ "${GENERATE_CONTAINERS}" -eq 1 ]]; then
+      elif is_in_array "${TMP_HT}" ${LUKS2_MODES} && [[ "${GENERATE_CONTAINERS}" -eq 0 ]]; then
         copy_luks2_dir=1
       elif is_in_array "${TMP_HT}" ${TC_MODES}; then
         copy_tc_dir=1
