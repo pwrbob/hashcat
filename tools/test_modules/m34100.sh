@@ -2,7 +2,7 @@
 set -euo pipefail
 
 if [[ -z "${1:-}" ]]; then
-#   echo "❌ Missing argument: password"
+#   echo "X Missing argument: password"
   password=""
 else
   password=$1
@@ -40,7 +40,7 @@ create_luks_container() {
   shift 6
   local extra_opts=("$@")
 
-  echo  "🔧 Creating $filename (size ${size_mb}MiB) with password length ${#PASSWORD}: $PASSWORD..." >> /tmp/m34100.sh
+  echo  "Creating $filename (size ${size_mb}MiB) with password length ${#PASSWORD}: $PASSWORD..." >> /tmp/m34100.sh
   dd if=/dev/zero of="$filename" bs=1M count="$size_mb" status=none
 
   loopdev=$(sudo losetup --show -f "$filename")
@@ -65,9 +65,9 @@ EOF
       "${extra_opts[@]}" \
       "$loopdev" <<< "$PASSWORD"; then
       true
-      echo "✅ Formatted: $filename" >> /tmp/m34100.sh
+      echo "Formatted: $filename" >> /tmp/m34100.sh
   else
-    echo "❌ Failed to format: $filename" >> /tmp/m34100.sh
+    echo "X Failed to format: $filename" >> /tmp/m34100.sh
     sudo losetup -d "$loopdev"
     rm -f "$filename"
     return
@@ -76,15 +76,15 @@ EOF
   name="luks$(basename "$filename" | sha1sum | cut -c1-8)"
 
   if [ -e "/dev/mapper/$name" ]; then
-    echo "⚠️  Device $name already exists. Closing it first." >> /tmp/m34100.sh
+    echo "! Device $name already exists. Closing it first." >> /tmp/m34100.sh
     sudo cryptsetup close "$name" || true
   fi
 
   if sudo cryptsetup open "$loopdev" "$name" <<< "$PASSWORD"; then
     true
-    echo "✅ Decrypted: $filename" >> /tmp/m34100.sh
+    echo "Decrypted: $filename" >> /tmp/m34100.sh
   else
-    echo  "❌ Failed to decrypt: $filename" >> /tmp/m34100.sh
+    echo  "X Failed to decrypt: $filename" >> /tmp/m34100.sh
     sudo losetup -d "$loopdev"
     rm -f "$filename"
     return
@@ -103,7 +103,7 @@ EOF
   done
   sudo cryptsetup close "$name"
 
-  echo  "✅ ext4: $filename" >> /tmp/m34100.sh
+  echo  "ext4: $filename" >> /tmp/m34100.sh
 
   sudo losetup -D
 }
@@ -118,8 +118,8 @@ cipher=${CIPHERS[$cipher_name]}
 
 file="${OUTPUT_DIR}/luks2-${cipher_name}-${kdf}-t${time}-m${memory}-p${threads}-size${size}MiB_$(date +%Y%m%d%H%M%S%6N).img"
 
-# echo  "➡️  Creating $file with:"
-# echo  "   kdf=$kdf time=$time memory=$memory threads=$threads cipher=$cipher"
+# echo -n "Creating $file with:"
+# echo  " kdf=$kdf time=$time memory=$memory threads=$threads cipher=$cipher"
 
 create_luks_container "$password" "$file" luks2 "$cipher" sha256 "$size" \
   --pbkdf "$kdf" \

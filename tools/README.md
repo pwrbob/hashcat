@@ -30,6 +30,6 @@ sudo apt install cryptsetup
 
 ### Example usage
 ```
-./test.sh -m 0 -D1 -t all
+./test.sh -m 0 -t all
 ```
 All options: `./test.sh --help`

@@ -269,10 +269,8 @@ function init()
     luks2_first_test_file="${luks2_tests_folder}/luks2-aes-argon2id-t4-m16-p1-size20MiB.img"
 
     if [ ! -f "${luks2_first_test_file}" ]; then
-      # luks2_tests="hashcat_luks2_testfiles.7z"
-      # luks2_tests_url="https://hashcat.net/misc/example_hashes/${luks2_tests}"
       luks2_tests="luks2_tests.7z"
-      luks2_tests_url="https://github.com/thatux/hashcat/raw/refs/heads/luks2_test_clean/tools/${luks2_tests}"
+      luks2_tests_url="https://hashcat.net/misc/example_hashes/${luks2_tests}"
 
       cd "${TDIR}" || exit
 
