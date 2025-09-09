@@ -10,9 +10,8 @@ fi
 
 TDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../" && pwd )"
 
-# Example arrays (adjust to your real ones)
+# Different Argon2 options
 ARGON_KDFS=("argon2id" "argon2i")
-
 ARGON_TIMES=(4 5 6)
 ARGON_MEMORY=(16 32 64 128 256 512 1024)
 ARGON_THREADS=(1 2 3 4) # max is 4 https://gitlab.com/cryptsetup/cryptsetup/-/blob/main/configure.ac?ref_type=heads#L787
