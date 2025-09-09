@@ -4160,11 +4160,6 @@ if [ "${PACKAGE}" -eq 0 ] || [ -z "${PACKAGE_FOLDER}" ]; then
     if [ "${HT}" -eq 65535 ]; then
       for TMP_HT in ${HASH_TYPES}; do
 
-        if is_in_array "${TMP_HT}" ${GENERATE_CONTAINERS_MODES} && [[ "${GENERATE_CONTAINERS}" -eq 0 ]]; then
-          echo "Skipping ${TMP_HT}: missing -g flag"
-          continue
-        fi
-
         if ! is_in_array "${TMP_HT}" ${LUKS_MODES}; then
           if ! ( is_in_array "${TMP_HT}" ${LUKS2_MODES} && [[ "${GENERATE_CONTAINERS}" -eq 0 ]] ); then
             if ! is_in_array "${TMP_HT}" ${TC_MODES}; then
@@ -4176,17 +4171,13 @@ if [ "${PACKAGE}" -eq 0 ] || [ -z "${PACKAGE_FOLDER}" ]; then
             fi
           fi
         fi
+
       done
     else
       for TMP_HT in $(seq "${HT_MIN}" "${HT_MAX}"); do
         if ! is_in_array "${TMP_HT}" ${HASH_TYPES}; then
           continue
         fi
-
-        # if is_in_array "${TMP_HT}" ${GENERATE_CONTAINERS_MODES} && [[ "${GENERATE_CONTAINERS}" -eq 0 ]]; then
-        #   echo "Skipping ${TMP_HT}: missing -g flag"
-        #   continue
-        # fi
 
         if ! is_in_array "${TMP_HT}" ${LUKS_MODES}; then
           if ! ( is_in_array "${TMP_HT}" ${LUKS2_MODES} && [[ "${GENERATE_CONTAINERS}" -eq 0 ]] ); then
