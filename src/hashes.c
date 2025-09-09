@@ -1376,6 +1376,7 @@ int hashes_init_stage1 (hashcat_ctx_t *hashcat_ctx)
           }
           else
           {
+            event_log_warning (hashcat_ctx, "Hash was parsed as a commandline argument (not as a file, maybe the hashfile doesn't exist?)");
             event_log_warning (hashcat_ctx, "Hash '%s': %s", input_buf, strparser (parser_status));
           }
 
