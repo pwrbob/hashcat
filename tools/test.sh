@@ -18,9 +18,6 @@ TC_MODES="6211 6212 6213 6221 6222 6223 6231 6232 6233 6241 6242 6243 29311 2931
 # List of VeraCrypt modes which have test containers
 VC_MODES="13711 13712 13713 13721 13722 13723 13731 13732 13733 13741 13742 13743 13751 13752 13753 13761 13762 13763 13771 13772 13773 13781 13782 13783 29411 29412 29413 29421 29422 29423 29431 29432 29433 29441 29442 29443 29451 29452 29453 29461 29462 29463 29471 29472 29473 29481 29482 29483"
 
-# List of modes that generate crypto-containers on the fly (only enabled with -g)
-GENERATE_CONTAINERS_MODES="34100"
-
 # List of modes which return a different output hash format than the input hash format
 NOCHECK_ENCODING="16800 22000"
 
@@ -198,7 +195,7 @@ function init()
   fi
 
   #LUKS1
-  if is_in_array "$hash_type" "${LUKS_MODES[@]}"; then
+  if is_in_array "$hash_type" ${LUKS_MODES}; then
     luks_tests_folder="${TDIR}/luks_tests/"
 
     if [ ! -d "${luks_tests_folder}" ]; then
@@ -259,7 +256,7 @@ function init()
 
 
   #LUKS2
-  if is_in_array "$hash_type" "${LUKS2_MODES[@]}" && [[ "${GENERATE_CONTAINERS}" -eq 0 ]]; then
+  if is_in_array "$hash_type" ${LUKS2_MODES} && [[ "${GENERATE_CONTAINERS}" -eq 0 ]]; then
     luks2_tests_folder="${TDIR}/luks2_tests/"
 
     if [ ! -d "${luks2_tests_folder}" ]; then
@@ -4144,7 +4141,6 @@ if [ "${PACKAGE}" -eq 0 ] || [ -z "${PACKAGE_FOLDER}" ]; then
     else
       echo "We'll need sudo to generate crypto-containers on-the-fly"
     fi
-    # fi
   fi
 
   if [ -z "${PACKAGE_FOLDER}" ]; then
@@ -4177,7 +4173,6 @@ if [ "${PACKAGE}" -eq 0 ] || [ -z "${PACKAGE_FOLDER}" ]; then
 
         if ! is_in_array "${TMP_HT}" ${LUKS_MODES}; then
           if ! ( is_in_array "${TMP_HT}" ${LUKS2_MODES} && [[ "${GENERATE_CONTAINERS}" -eq 0 ]] ); then
-            # Exclude TrueCrypt and VeraCrypt testing modes
             if ! is_in_array "${TMP_HT}" ${TC_MODES}; then
               if ! is_in_array "${TMP_HT}" ${VC_MODES}; then
                 if ! is_in_array "${TMP_HT}" ${CL_MODES}; then
