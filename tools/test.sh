@@ -441,6 +441,20 @@ function init()
   # generate multiple pass/hash foreach len (2 to 8)
   if [ "${MODE}" -ge 1 ]; then
 
+    # no multi hash checks for these modes (because we only have 1 hash for each of them)
+
+    if   [ "${hash_type}" -eq 14000 ]; then
+      return
+    elif [ "${hash_type}" -eq 14100 ]; then
+      return
+    elif [ "${hash_type}" -eq 14600 ]; then
+      return
+    elif [ "${hash_type}" -eq 14900 ]; then
+      return
+    elif [ "${hash_type}" -eq 15400 ]; then
+      return
+    fi
+
     i=2
 
     while [ "$i" -lt 9 ]; do
@@ -751,6 +765,20 @@ function attack_0()
   # multihash
   if [ "${MODE}" -ne 0 ]; then
 
+    # no multi hash checks for these modes (because we only have 1 hash for each of them)
+
+    if   [ "${hash_type}" -eq 14000 ]; then
+      return
+    elif [ "${hash_type}" -eq 14100 ]; then
+      return
+    elif [ "${hash_type}" -eq 14600 ]; then
+      return
+    elif [ "${hash_type}" -eq 14900 ]; then
+      return
+    elif [ "${hash_type}" -eq 15400 ]; then
+      return
+    fi
+
     e_ce=0
     e_rs=0
     e_to=0
@@ -764,7 +792,7 @@ function attack_0()
 
     # if file_only -> decode all base64 "hashes" and put them in the temporary file
 
-    if [ "${file_only}" -eq 1 ]; then
+    if [ "${file_only}" -eq 1 ] && [[ "${GENERATE_CONTAINERS}" -eq 0 ]]; then
 
       temp_file="${OUTD}/${hash_type}_filebased_only_temp.txt"
       rm -f "${temp_file}"
@@ -914,7 +942,7 @@ function attack_1()
 
       if [ $i -gt ${min} ]; then
 
-        if [ "${file_only}" -eq 1 ]; then
+        if [ "${file_only}" -eq 1 ] && [[ "${GENERATE_CONTAINERS}" -eq 0 ]]; then
 
           temp_file="${OUTD}/${hash_type}_filebased_only_temp.txt"
 
@@ -1072,6 +1100,8 @@ function attack_1()
       return
     elif [ "${hash_type}" -eq 14100 ]; then
       return
+    elif [ "${hash_type}" -eq 14600 ]; then
+      return
     elif [ "${hash_type}" -eq 14900 ]; then
       return
     elif [ "${hash_type}" -eq 15400 ]; then
@@ -1099,7 +1129,7 @@ function attack_1()
 
     # if file_only -> decode all base64 "hashes" and put them in the temporary file
 
-    if [ "${file_only}" -eq 1 ]; then
+    if [ "${file_only}" -eq 1 ] && [[ "${GENERATE_CONTAINERS}" -eq 0 ]]; then
 
       temp_file="${OUTD}/${hash_type}_filebased_only_temp.txt"
       rm -f "${temp_file}"
@@ -1236,7 +1266,7 @@ function attack_3()
         fi
       fi
 
-      if [ "${file_only}" -eq 1 ]; then
+      if [ "${file_only}" -eq 1 ] && [[ "${GENERATE_CONTAINERS}" -eq 0 ]]; then
 
         temp_file="${OUTD}/${hash_type}_filebased_only_temp.txt"
 
@@ -1385,6 +1415,8 @@ function attack_3()
       return
     elif [ "${hash_type}" -eq 14100 ]; then
       return
+    elif [ "${hash_type}" -eq 14600 ]; then
+      return
     elif [ "${hash_type}" -eq 14900 ]; then
       return
     elif [ "${hash_type}" -eq 15400 ]; then
@@ -1423,7 +1455,7 @@ function attack_3()
 
     # if file_only -> decode all base64 "hashes" and put them in the temporary file
 
-    if [ "${file_only}" -eq 1 ]; then
+    if [ "${file_only}" -eq 1 ] && [[ "${GENERATE_CONTAINERS}" -eq 0 ]]; then
 
       temp_file="${OUTD}/${hash_type}_filebased_only_temp.txt"
       rm -f "${temp_file}"
@@ -1888,7 +1920,7 @@ function attack_6()
 
       if [ ${i} -gt ${min} ]; then
 
-        if [ "${file_only}" -eq 1 ]; then
+        if [ "${file_only}" -eq 1 ] && [[ "${GENERATE_CONTAINERS}" -eq 0 ]]; then
 
           temp_file="${OUTD}/${hash_type}_filebased_only_temp.txt"
 
@@ -2052,6 +2084,8 @@ function attack_6()
       return
     elif [ "${hash_type}" -eq 14100 ]; then
       return
+    elif [ "${hash_type}" -eq 14600 ]; then
+      return
     elif [ "${hash_type}" -eq 14900 ]; then
       return
     elif [ "${hash_type}" -eq 15400 ]; then
@@ -2107,7 +2141,7 @@ function attack_6()
 
       # if file_only -> decode all base64 "hashes" and put them in the temporary file
 
-      if [ "${file_only}" -eq 1 ]; then
+      if [ "${file_only}" -eq 1 ] && [[ "${GENERATE_CONTAINERS}" -eq 0 ]]; then
 
         temp_file="${OUTD}/${hash_type}_filebased_only_temp.txt"
         rm -f "${temp_file}"
@@ -2278,7 +2312,7 @@ function attack_7()
 
       if [ ${i} -gt ${min} ]; then
 
-        if [ "${file_only}" -eq 1 ]; then
+        if [ "${file_only}" -eq 1 ] && [[ "${GENERATE_CONTAINERS}" -eq 0 ]]; then
 
           temp_file="${OUTD}/${hash_type}_filebased_only_temp.txt"
 
@@ -2495,6 +2529,8 @@ function attack_7()
       return
     elif [ "${hash_type}" -eq 14100 ]; then
       return
+    elif [ "${hash_type}" -eq 14600 ]; then
+      return
     elif [ "${hash_type}" -eq 14900 ]; then
       return
     elif [ "${hash_type}" -eq 15400 ]; then
@@ -2561,7 +2597,7 @@ function attack_7()
 
       # if file_only -> decode all base64 "hashes" and put them in the temporary file
 
-      if [ "${file_only}" -eq 1 ]; then
+      if [ "${file_only}" -eq 1 ] && [[ "${GENERATE_CONTAINERS}" -eq 0 ]]; then
 
         temp_file="${OUTD}/${hash_type}_filebased_only_temp.txt"
         rm -f "${temp_file}"
