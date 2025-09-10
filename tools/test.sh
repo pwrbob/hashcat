@@ -22,16 +22,20 @@ VC_MODES="13711 13712 13713 13721 13722 13723 13731 13732 13733 13741 13742 1374
 NOCHECK_ENCODING="16800 22000"
 
 # List of LUKS modes which have test containers
-LUKS_MODES="14600 29511 29512 29513 29521 29522 29523 29531 29532 29533 29541 29542 29543"
+LUKS1_LEGACY_MODE="14600"
+LUKS1_MODES="29511 29512 29513 29521 29522 29523 29531 29532 29533 29541 29542 29543"
+LUKS1_ALL_MODES="${LUKS1_LEGACY_MODE} ${LUKS1_MODES}"
 
 # List of LUKS2 modes which have test containers
 LUKS2_MODES="34100"
+
+LUKS_MODES="${LUKS1_MODES} ${LUKS2_MODES}"
 
 # Cryptoloop mode which have test containers
 CL_MODES="14511 14512 14513 14521 14522 14523 14531 14532 14533 14541 14542 14543 14551 14552 14553"
 
 HASH_TYPES=$(ls "${TDIR}"/test_modules/*.pm | sed -E 's/.*m0*([0-9]+).pm/\1/')
-HASH_TYPES="${HASH_TYPES} ${TC_MODES} ${VC_MODES} ${LUKS_MODES} ${LUKS2_MODES} ${CL_MODES}"
+HASH_TYPES="${HASH_TYPES} ${TC_MODES} ${VC_MODES} ${LUKS1_ALL_MODES} ${LUKS2_MODES} ${CL_MODES}"
 HASH_TYPES=$(echo -n "${HASH_TYPES}" | tr ' ' '\n' | sort -u -n | tr '\n' ' ')
 
 VECTOR_WIDTHS="1 2 4 8 16"
@@ -186,7 +190,7 @@ function init()
     return 0
   fi
 
-  if { is_in_array "$hash_type" ${LUKS_MODES} || is_in_array "$hash_type" ${LUKS2_MODES}; } && [[ "${GENERATE_CONTAINERS}" -eq 0 ]] ; then
+  if { is_in_array "$hash_type" ${LUKS1_ALL_MODES} || is_in_array "$hash_type" ${LUKS2_MODES}; } && [[ "${GENERATE_CONTAINERS}" -eq 0 ]] ; then
     which 7z &>/dev/null
     if [ $? -eq 1 ]; then
       echo "ATTENTION: 7z is missing. Skipping download and extract luks test files."
@@ -195,7 +199,7 @@ function init()
   fi
 
   #LUKS1
-  if is_in_array "$hash_type" ${LUKS_MODES} && [[ "${GENERATE_CONTAINERS}" -eq 0 ]] ; then
+  if is_in_array "$hash_type" ${LUKS1_ALL_MODES} && [[ "${GENERATE_CONTAINERS}" -eq 0 ]] ; then
     luks_tests_folder="${TDIR}/luks_tests/"
 
     if [ ! -d "${luks_tests_folder}" ]; then
@@ -324,7 +328,7 @@ function init()
   sed 's/^echo *|.*$//'       "${cmd_file}" | awk '{print $2}'                                                                    > "${OUTD}/${hash_type}_passwords.txt"
   sed 's/^echo *|/echo "" |/' "${cmd_file}" | awk '{t="";for(i=10;i<=NF;i++){if(t){t=t" "$i}else{t=$i}};print t}' | cut -d"'" -f2 > "${OUTD}/${hash_type}_hashes.txt"
 
-  if [ "${hash_type}" -eq 34100 ]; then
+  if is_in_array "${hash_type}" ${LUKS_MODES}; then
     # 34100 LUKS2 dynamically generates filenames, we need to cat those to get the hashes
     mv "${OUTD}/${hash_type}_hashes.txt" "${OUTD}/${hash_type}_hashes.tmp"
     cat "${OUTD}/${hash_type}_hashes.tmp" | while read f; do cat $f; done > "${OUTD}/${hash_type}_hashes.txt"
@@ -460,7 +464,7 @@ function init()
       sed 's/^echo *|.*$//'       "${cmd_file}" | awk '{print $2}'                                                                    > "${OUTD}/${hash_type}_passwords_multi_${i}.txt"
       sed 's/^echo *|/echo "" |/' "${cmd_file}" | awk '{t="";for(i=10;i<=NF;i++){if(t){t=t" "$i}else{t=$i}};print t}' | cut -d"'" -f2 > "${OUTD}/${hash_type}_hashes_multi_${i}.txt"
 
-      if [ "${hash_type}" -eq 34100 ]; then
+      if is_in_array "${hash_type}" ${LUKS_MODES}; then
         mv "${OUTD}/${hash_type}_hashes_multi_${i}.txt" "${OUTD}/${hash_type}_hashes_multi_${i}.tmp"
         cat  "${OUTD}/${hash_type}_hashes_multi_${i}.tmp" | while read f; do cat $f; done > "${OUTD}/${hash_type}_hashes_multi_${i}.txt"
         rm  "${OUTD}/${hash_type}_hashes_multi_${i}.tmp"
@@ -671,7 +675,7 @@ function attack_0()
       echo "${output}" >> "${OUTD}/logfull.txt"
 
       if [ "${ret}" -eq 0 ]; then
-        if   [ "${hash_type}" -ne  34100 ]; then
+        if ! (is_in_array "${hash_type}" ${LUKS_MODES}); then
           if [ "${pass_only}" -eq 1 ]; then
             search=":${pass}"
           else
@@ -682,10 +686,10 @@ function attack_0()
           newRet=$?
         fi
 
-        if [[ "${newRet}" -eq 2 || "${hash_type}" -eq 34100 ]]; then
+        if [[ "${newRet}" -eq 2 ]]; then
           # out-of-memory, workaround
 
-          if [ "${hash_type}" -eq 34100 ]; then
+          if is_in_array "${hash_type}" ${LUKS_MODES}; then
             search="$(cat ${hash} | tr -d '\n'):${pass}" #hash is a filename for 34100
             echo "${output}" | grep -E '^\$luks\$' | head -1 > tmp_file_out #cracked hash from hashcat output
           else
@@ -713,7 +717,7 @@ function attack_0()
           fi
         fi
 
-        if [ "${newRet}" -ne 0 ]; then
+        if [[ "${newRet}" -ne 0 ]]; then
           if [ "${newRet}" -eq 2 ]; then
             ret=20
           else
@@ -795,7 +799,7 @@ function attack_0()
 
         pass=$(sed -n ${i}p "${OUTD}/${hash_type}_passwords.txt")
 
-        if   [ "${hash_type}" -ne  34100 ]; then
+        if is_in_array "${hash_type}" ${LUKS_MODES}; then
           if [ "${pass_only}" -eq 1 ]; then
             search=":${pass}"
           else
@@ -807,7 +811,7 @@ function attack_0()
           newRet=$?
         fi
 
-        if [ "${hash_type}" -eq 34100 ]; then
+        if is_in_array "${hash_type}" ${LUKS_MODES}; then
           search="$(echo ${hash} | tr -d '\n'):${pass}" #hash is read from file already
           to_search_in_out="$(echo ${hash} | head -c 200)"
           echo "${output}" | grep -F "$to_search_in_out" | head -1 > tmp_file_out #cracked hash from hashcat output
@@ -1304,7 +1308,7 @@ function attack_3()
         line_dict=$(sed -n ${i}p "${dict}")
 
 
-        if   [ "${hash_type}" -eq  34100 ]; then
+        if is_in_array "${hash_type}" ${LUKS_MODES}; then
           if [ "${pass_only}" -eq 1 ]; then
             search=":${line_dict}"
           else
@@ -4152,7 +4156,7 @@ if [ "${PACKAGE}" -eq 0 ] || [ -z "${PACKAGE_FOLDER}" ]; then
     if [ "${HT}" -eq 65535 ]; then
       for TMP_HT in ${HASH_TYPES}; do
 
-        if ! ( is_in_array "${TMP_HT}" ${LUKS_MODES} && [[ "${GENERATE_CONTAINERS}" -eq 0 ]] ); then
+        if ! ( is_in_array "${TMP_HT}" ${LUKS1_ALL_MODES} && [[ "${GENERATE_CONTAINERS}" -eq 0 ]] ); then
           if ! ( is_in_array "${TMP_HT}" ${LUKS2_MODES} && [[ "${GENERATE_CONTAINERS}" -eq 0 ]] ); then
             if ! is_in_array "${TMP_HT}" ${TC_MODES}; then
               if ! is_in_array "${TMP_HT}" ${VC_MODES}; then
@@ -4171,7 +4175,7 @@ if [ "${PACKAGE}" -eq 0 ] || [ -z "${PACKAGE_FOLDER}" ]; then
           continue
         fi
 
-        if ! ( is_in_array "${TMP_HT}" ${LUKS_MODES} && [[ "${GENERATE_CONTAINERS}" -eq 0 ]] ); then
+        if ! ( is_in_array "${TMP_HT}" ${LUKS1_ALL_MODES} && [[ "${GENERATE_CONTAINERS}" -eq 0 ]] ); then
           if ! ( is_in_array "${TMP_HT}" ${LUKS2_MODES} && [[ "${GENERATE_CONTAINERS}" -eq 0 ]] ); then
             if ! is_in_array "${TMP_HT}" ${TC_MODES}; then
               if ! is_in_array "${TMP_HT}" ${VC_MODES}; then
@@ -4323,7 +4327,7 @@ if [ "${PACKAGE}" -eq 0 ] || [ -z "${PACKAGE_FOLDER}" ]; then
               truecrypt_test "${hash_type}" 0
               truecrypt_test "${hash_type}" 1
               truecrypt_test "${hash_type}" 2
-            elif is_in_array "${hash_type}" ${LUKS_MODES} && [[ "${GENERATE_CONTAINERS}" -eq 0 ]] ; then
+            elif is_in_array "${hash_type}" ${LUKS1_ALL_MODES} && [[ "${GENERATE_CONTAINERS}" -eq 0 ]] ; then
               # run luks tests
               if [ ${hash_type} -eq 14600 ]; then
                 # for legacy mode
@@ -4406,7 +4410,7 @@ if [ "${PACKAGE}" -eq 1 ]; then
     copy_cl_dir=1
   else
     for TMP_HT in $(seq "${HT_MIN}" "${HT_MAX}"); do
-      if is_in_array "${TMP_HT}" ${LUKS_MODES} && [[ "${GENERATE_CONTAINERS}" -eq 0 ]] ; then
+      if is_in_array "${TMP_HT}" ${LUKS1_ALL_MODES} && [[ "${GENERATE_CONTAINERS}" -eq 0 ]] ; then
         copy_luks_dir=1
       elif is_in_array "${TMP_HT}" ${LUKS2_MODES} && [[ "${GENERATE_CONTAINERS}" -eq 0 ]]; then
         copy_luks2_dir=1

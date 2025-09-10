@@ -17,12 +17,6 @@ fi
 
 TDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../" && pwd )"
 
-#14600
-LUKS_TYPES=("luks1")
-HASHES=("sha1" "sha256" "sha512" "ripemd160" "whirlpool")
-CIPHERS=("aes" "serpent" "twofish")
-CIPHER_MODES=("cbc-essiv" "cbc-plain64" "xts-plain64")
-KEYSIZES=("128" "256" "512")
 
 size=20   # MiB
 
@@ -167,36 +161,74 @@ EOF
 # whirlpool_twofish-cbc-essiv_512
 # whirlpool_twofish-cbc-plain64_512
 
-
-# 29511 	LUKS v1 SHA-1 + AES
-# 29512 	LUKS v1 SHA-1 + Serpent
-# 29513 	LUKS v1 SHA-1 + Twofish
-# 29521 	LUKS v1 SHA-256 + AES
-# 29522 	LUKS v1 SHA-256 + Serpent
-# 29523 	LUKS v1 SHA-256 + Twofish
-# 29531 	LUKS v1 SHA-512 + AES
-# 29532 	LUKS v1 SHA-512 + Serpent
-# 29533 	LUKS v1 SHA-512 + Twofish
-# 29541 	LUKS v1 RIPEMD-160 + AES
-# 29542 	LUKS v1 RIPEMD-160 + Serpent
-# 29543 	LUKS v1 RIPEMD-160 + Twofish
+LUKS_TYPES=("luks1")
+HASHES=("sha1" "sha256" "sha512" "ripemd160" "whirlpool")
+CIPHERS=("aes" "serpent" "twofish")
+CIPHER_MODES=("cbc-essiv" "cbc-plain64" "xts-plain64")
+KEYSIZES=("128" "256" "512")
 
 # --- random picks ---
 while true; do
   luks_type=${LUKS_TYPES[$RANDOM % ${#LUKS_TYPES[@]}]}
   cipher=${CIPHERS[$RANDOM % ${#CIPHERS[@]}]}
   cipher_mode=${CIPHER_MODES[$RANDOM % ${#CIPHER_MODES[@]}]}
-  cipher_cipher_mode=${cipher}-${cipher_mode}
   hash=${HASHES[$RANDOM % ${#HASHES[@]}]}
   keysize=${KEYSIZES[$RANDOM % ${#KEYSIZES[@]}]}
 
   # filter out not supported combinations:
-
   case "$hashcat_module" in
-    14600)
+    14600) # LUKS v1 (legacy)
       case "$hash" in
         whirlpool) continue ;;   # 14600 doesnt support any whirlpool hashes see kern_type_luks_t src/modules/module_14600.c; 14651, 14652, 14653 don't exist..
       esac
+      ;;
+    29511) # LUKS v1 SHA-1 + AES
+      cipher="aes"
+      hash="sha1"
+      ;;
+    29512) # LUKS v1 SHA-1 + Serpent
+      cipher="serpent"
+      hash="sha1"
+      ;;
+    29513) # LUKS v1 SHA-1 + Twofish
+      cipher="twofish"
+      hash="sha1"
+      ;;
+    29521) # LUKS v1 SHA-256 + AES
+      cipher="aes"
+      hash="sha256"
+      ;;
+    29522) # LUKS v1 SHA-256 + Serpent
+      cipher="serpent"
+      hash="sha256"
+      ;;
+    29523) # LUKS v1 SHA-256 + Twofish
+      cipher="twofish"
+      hash="sha256"
+      ;;
+    29531) # LUKS v1 SHA-512 + AES
+      cipher="aes"
+      hash="sha512"
+      ;;
+    29532) # LUKS v1 SHA-512 + Serpent
+      cipher="serpent"
+      hash="sha512"
+      ;;
+    29533) # LUKS v1 SHA-512 + Twofish
+      cipher="twofish"
+      hash="sha512"
+      ;;
+    29541) # LUKS v1 RIPEMD-160 + AES
+      cipher="aes"
+      hash="ripemd160"
+      ;;
+    29542) # LUKS v1 RIPEMD-160 + Serpent
+      cipher="serpent"
+      hash="ripemd160"
+      ;;
+    29543) # LUKS v1 RIPEMD-160 + Twofish
+      cipher="twofish"
+      hash="ripemd160"
       ;;
   esac
 
@@ -222,11 +254,10 @@ while true; do
 
 done
 
-# file="${OUTPUT_DIR}/luks2-${cipher_name}-${kdf}-t${time}-m${memory}-p${threads}-size${size}MiB_$(date +%Y%m%d%H%M%S%6N).img"
 file="${OUTPUT_DIR}/${luks_type}_${hash}_${cipher}_${cipher_mode}_${keysize}-size${size}MiB_$(date +%Y%m%d%H%M%S%6N).img"
 
 # echo "Creating $file"
-
+cipher_cipher_mode=${cipher}-${cipher_mode}
 create_luks_container "$password" "$file" "$luks_type" "$cipher_cipher_mode" "$hash" "$keysize" "$size"
 
 
