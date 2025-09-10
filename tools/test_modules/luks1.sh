@@ -3,9 +3,9 @@ set -euo pipefail
 
 if [[ -z "${1:-}" ]]; then
   echo "X Missing argument: LUKS mode"
-  cipher_modeode=""
+  hashcat_module=""
 else
-  cipher_modeode=$1
+  hashcat_module=$1
 fi
 
 if [[ -z "${2:-}" ]]; then
@@ -167,16 +167,39 @@ EOF
 # whirlpool_twofish-cbc-essiv_512
 # whirlpool_twofish-cbc-plain64_512
 
+
+# 29511 	LUKS v1 SHA-1 + AES
+# 29512 	LUKS v1 SHA-1 + Serpent
+# 29513 	LUKS v1 SHA-1 + Twofish
+# 29521 	LUKS v1 SHA-256 + AES
+# 29522 	LUKS v1 SHA-256 + Serpent
+# 29523 	LUKS v1 SHA-256 + Twofish
+# 29531 	LUKS v1 SHA-512 + AES
+# 29532 	LUKS v1 SHA-512 + Serpent
+# 29533 	LUKS v1 SHA-512 + Twofish
+# 29541 	LUKS v1 RIPEMD-160 + AES
+# 29542 	LUKS v1 RIPEMD-160 + Serpent
+# 29543 	LUKS v1 RIPEMD-160 + Twofish
+
 # --- random picks ---
 while true; do
   luks_type=${LUKS_TYPES[$RANDOM % ${#LUKS_TYPES[@]}]}
   cipher=${CIPHERS[$RANDOM % ${#CIPHERS[@]}]}
   cipher_mode=${CIPHER_MODES[$RANDOM % ${#CIPHER_MODES[@]}]}
-  cipher=${cipher}-${cipher_mode}
+  cipher_cipher_mode=${cipher}-${cipher_mode}
   hash=${HASHES[$RANDOM % ${#HASHES[@]}]}
   keysize=${KEYSIZES[$RANDOM % ${#KEYSIZES[@]}]}
 
   # filter out not supported combinations:
+
+  case "$hashcat_module" in
+    14600)
+      case "$hash" in
+        whirlpool) continue ;;   # 14600 doesnt support any whirlpool hashes see kern_type_luks_t src/modules/module_14600.c; 14651, 14652, 14653 don't exist..
+      esac
+      ;;
+  esac
+
   case "$keysize" in
     128)
       case "$cipher_mode" in
@@ -200,13 +223,18 @@ while true; do
 done
 
 # file="${OUTPUT_DIR}/luks2-${cipher_name}-${kdf}-t${time}-m${memory}-p${threads}-size${size}MiB_$(date +%Y%m%d%H%M%S%6N).img"
-file="${OUTPUT_DIR}/${luks_type}_${hash}_${cipher}_${keysize}-size${size}MiB_$(date +%Y%m%d%H%M%S%6N).img"
+file="${OUTPUT_DIR}/${luks_type}_${hash}_${cipher}_${cipher_mode}_${keysize}-size${size}MiB_$(date +%Y%m%d%H%M%S%6N).img"
 
 # echo "Creating $file"
 
-create_luks_container "$password" "$file" "$luks_type" "$cipher" "$hash" "$keysize" "$size"
+create_luks_container "$password" "$file" "$luks_type" "$cipher_cipher_mode" "$hash" "$keysize" "$size"
+
 
 ${TDIR}/luks2hashcat.py $file | grep -vE '^[0-9]+$' > $file.hash
 
-echo "$file.hash"
+if [[ ${hashcat_module} -eq "14600" ]]; then
+  echo "$file"
+else
+  echo "$file.hash"
+fi
 # echo ""

@@ -638,7 +638,7 @@ function attack_0()
         break
       fi
 
-      if [ "${file_only}" -eq 1 ]; then
+      if [ "${file_only}" -eq 1 ] && [[ "${GENERATE_CONTAINERS}" -eq 0 ]]; then
 
         temp_file="${OUTD}/${hash_type}_filebased_only_temp.txt"
 
@@ -4152,7 +4152,7 @@ if [ "${PACKAGE}" -eq 0 ] || [ -z "${PACKAGE_FOLDER}" ]; then
     if [ "${HT}" -eq 65535 ]; then
       for TMP_HT in ${HASH_TYPES}; do
 
-        if ! is_in_array "${TMP_HT}" ${LUKS_MODES} && [[ "${GENERATE_CONTAINERS}" -eq 0 ]] ; then
+        if ! ( is_in_array "${TMP_HT}" ${LUKS_MODES} && [[ "${GENERATE_CONTAINERS}" -eq 0 ]] ); then
           if ! ( is_in_array "${TMP_HT}" ${LUKS2_MODES} && [[ "${GENERATE_CONTAINERS}" -eq 0 ]] ); then
             if ! is_in_array "${TMP_HT}" ${TC_MODES}; then
               if ! is_in_array "${TMP_HT}" ${VC_MODES}; then
@@ -4171,7 +4171,7 @@ if [ "${PACKAGE}" -eq 0 ] || [ -z "${PACKAGE_FOLDER}" ]; then
           continue
         fi
 
-        if ! is_in_array "${TMP_HT}" ${LUKS_MODES} && [[ "${GENERATE_CONTAINERS}" -eq 0 ]] ; then
+        if ! ( is_in_array "${TMP_HT}" ${LUKS_MODES} && [[ "${GENERATE_CONTAINERS}" -eq 0 ]] ); then
           if ! ( is_in_array "${TMP_HT}" ${LUKS2_MODES} && [[ "${GENERATE_CONTAINERS}" -eq 0 ]] ); then
             if ! is_in_array "${TMP_HT}" ${TC_MODES}; then
               if ! is_in_array "${TMP_HT}" ${VC_MODES}; then
