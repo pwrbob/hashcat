@@ -735,7 +735,7 @@ function attack_0()
       msg="Compare Error"
     elif [ "${e_rs}" -ne 0 ]; then
       msg="Skip"
-    elif [ "${e_nf}" -ne 0 ] || [ "${e_nm}" -ne 0 ]; then
+    elif [ "${e_nf}" -ne 0 ] || [ "${e_nm}" -ne 0 ] || [ "${cnt}" -eq 0 ]; then
       msg="Error"
     elif [ "${e_to}" -ne 0 ]; then
       msg="Warning"
@@ -856,7 +856,7 @@ function attack_0()
       msg="Compare Error"
     elif [ "${e_rs}" -ne 0 ]; then
       msg="Skip"
-    elif [ "${e_nf}" -ne 0 ] || [ "${e_nm}" -ne 0 ]; then
+    elif [ "${e_nf}" -ne 0 ] || [ "${e_nm}" -ne 0 ] || [ "${cnt}" -eq 0 ]; then
       msg="Error"
     elif [ "${e_to}" -ne 0 ]; then
       msg="Warning"
@@ -1050,7 +1050,7 @@ function attack_1()
       msg="Compare Error"
     elif [ "${e_rs}" -ne 0 ]; then
       msg="Skip"
-    elif [ "${e_nf}" -ne 0 ] || [ "${e_nm}" -ne 0 ]; then
+    elif [ "${e_nf}" -ne 0 ] || [ "${e_nm}" -ne 0 ] || [ "${cnt}" -eq 0 ]; then
       msg="Error"
     elif [ "${e_to}" -ne 0 ]; then
       msg="Warning"
@@ -1172,7 +1172,7 @@ function attack_1()
       msg="Compare Error"
     elif [ "${e_rs}" -ne 0 ]; then
       msg="Skip"
-    elif [ "${e_nf}" -ne 0 ] || [ "${e_nm}" -ne 0 ]; then
+    elif [ "${e_nf}" -ne 0 ] || [ "${e_nm}" -ne 0 ] || [ "${cnt}" -eq 0 ]; then
       msg="Error"
     elif [ "${e_to}" -ne 0 ]; then
       msg="Warning"
@@ -1363,7 +1363,7 @@ function attack_3()
       msg="Compare Error"
     elif [ "${e_rs}" -ne 0 ]; then
       msg="Skip"
-    elif [ "${e_nf}" -ne 0 ] || [ "${e_nm}" -ne 0 ]; then
+    elif [ "${e_nf}" -ne 0 ] || [ "${e_nm}" -ne 0 ] || [ "${cnt}" -eq 0 ]; then
       msg="Error"
     elif [ "${e_to}" -ne 0 ]; then
       msg="Warning"
@@ -1786,7 +1786,7 @@ function attack_3()
       msg="Compare Error"
     elif [ "${e_rs}" -ne 0 ]; then
       msg="Skip"
-    elif [ "${e_nf}" -ne 0 ] || [ "${e_nm}" -ne 0 ]; then
+    elif [ "${e_nf}" -ne 0 ] || [ "${e_nm}" -ne 0 ] || [ "${cnt}" -eq 0 ]; then
       msg="Error"
     elif [ "${e_to}" -ne 0 ]; then
       msg="Warning"
@@ -2027,7 +2027,7 @@ function attack_6()
       msg="Compare Error"
     elif [ "${e_rs}" -ne 0 ]; then
       msg="Skip"
-    elif [ "${e_nf}" -ne 0 ] || [ "${e_nm}" -ne 0 ]; then
+    elif [ "${e_nf}" -ne 0 ] || [ "${e_nm}" -ne 0 ] || [ "${cnt}" -eq 0 ]; then
       msg="Error"
     elif [ "${e_to}" -ne 0 ]; then
       msg="Warning"
@@ -2179,7 +2179,7 @@ function attack_6()
       msg="Compare Error"
     elif [ "${e_rs}" -ne 0 ]; then
       msg="Skip"
-    elif [ "${e_nf}" -ne 0 ] || [ "${e_nm}" -ne 0 ]; then
+    elif [ "${e_nf}" -ne 0 ] || [ "${e_nm}" -ne 0 ] || [ "${cnt}" -eq 0 ]; then
       msg="Error"
     elif [ "${e_to}" -ne 0 ]; then
       msg="Warning"
@@ -2470,7 +2470,7 @@ function attack_7()
       msg="Compare Error"
     elif [ "${e_rs}" -ne 0 ]; then
       msg="Skip"
-    elif [ "${e_nf}" -ne 0 ] || [ "${e_nm}" -ne 0 ]; then
+    elif [ "${e_nf}" -ne 0 ] || [ "${e_nm}" -ne 0 ] || [ "${cnt}" -eq 0 ]; then
       msg="Error"
     elif [ "${e_to}" -ne 0 ]; then
       msg="Warning"
@@ -2657,7 +2657,7 @@ function attack_7()
       msg="Compare Error"
     elif [ "${e_rs}" -ne 0 ]; then
       msg="Skip"
-    elif [ "${e_nf}" -ne 0 ] || [ "${e_nm}" -ne 0 ]; then
+    elif [ "${e_nf}" -ne 0 ] || [ "${e_nm}" -ne 0 ] || [ "${cnt}" -eq 0 ]; then
       msg="Error"
     elif [ "${e_to}" -ne 0 ]; then
       msg="Warning"
@@ -2840,7 +2840,7 @@ function cryptoloop_test()
       msg="Compare Error"
     elif [ "${e_rs}" -ne 0 ]; then
       msg="Skip"
-    elif [ "${e_nf}" -ne 0 ] || [ "${e_nm}" -ne 0 ]; then
+    elif [ "${e_nf}" -ne 0 ] || [ "${e_nm}" -ne 0 ] || [ "${cnt}" -eq 0 ]; then
       msg="Error"
     elif [ "${e_to}" -ne 0 ]; then
       msg="Warning"
@@ -3218,7 +3218,7 @@ function truecrypt_test()
       msg="Compare Error"
     elif [ "${e_rs}" -ne 0 ]; then
       msg="Skip"
-    elif [ "${e_nf}" -ne 0 ] || [ "${e_nm}" -ne 0 ]; then
+    elif [ "${e_nf}" -ne 0 ] || [ "${e_nm}" -ne 0 ] || [ "${cnt}" -eq 0 ]; then
       msg="Error"
     elif [ "${e_to}" -ne 0 ]; then
       msg="Warning"
@@ -3319,7 +3319,7 @@ function veracrypt_test()
     msg="Compare Error"
   elif [ "${e_rs}" -ne 0 ]; then
     msg="Skip"
-  elif [ "${e_nf}" -ne 0 ] || [ "${e_nm}" -ne 0 ]; then
+  elif [ "${e_nf}" -ne 0 ] || [ "${e_nm}" -ne 0 ] || [ "${cnt}" -eq 0 ]; then
     msg="Error"
   elif [ "${e_to}" -ne 0 ]; then
     msg="Warning"
@@ -3520,7 +3520,7 @@ function luks_test()
           msg="Compare Error"
         elif [ "${e_rs}" -ne 0 ]; then
           msg="Skip"
-        elif [ "${e_nf}" -ne 0 ] || [ "${e_nm}" -ne 0 ]; then
+        elif [ "${e_nf}" -ne 0 ] || [ "${e_nm}" -ne 0 ] || [ "${cnt}" -eq 0 ]; then
           msg="Error"
         elif [ "${e_to}" -ne 0 ]; then
           msg="Warning"
@@ -3666,7 +3666,7 @@ function luks_legacy_test()
               msg="Compare Error"
             elif [ "${e_rs}" -ne 0 ]; then
               msg="Skip"
-            elif [ "${e_nf}" -ne 0 ] || [ "${e_nm}" -ne 0 ]; then
+            elif [ "${e_nf}" -ne 0 ] || [ "${e_nm}" -ne 0 ] || [ "${cnt}" -eq 0 ]; then
               msg="Error"
             elif [ "${e_to}" -ne 0 ]; then
               msg="Warning"
@@ -3781,7 +3781,7 @@ function luks2_test()
         msg="Compare Error"
       elif [ "${e_rs}" -ne 0 ]; then
         msg="Skip"
-      elif [ "${e_nf}" -ne 0 ] || [ "${e_nm}" -ne 0 ]; then
+      elif [ "${e_nf}" -ne 0 ] || [ "${e_nm}" -ne 0 ] || [ "${cnt}" -eq 0 ]; then
         msg="Error"
       elif [ "${e_to}" -ne 0 ]; then
         msg="Warning"
