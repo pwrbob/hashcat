@@ -186,7 +186,7 @@ function init()
     return 0
   fi
 
-  if is_in_array "$hash_type" ${LUKS_MODES} || { is_in_array "$hash_type" ${LUKS2_MODES} && [[ "${GENERATE_CONTAINERS}" -eq 0 ]] }; then
+  if { is_in_array "$hash_type" ${LUKS_MODES} || is_in_array "$hash_type" ${LUKS2_MODES}; } && [[ "${GENERATE_CONTAINERS}" -eq 0 ]] ; then
     which 7z &>/dev/null
     if [ $? -eq 1 ]; then
       echo "ATTENTION: 7z is missing. Skipping download and extract luks test files."
@@ -195,7 +195,7 @@ function init()
   fi
 
   #LUKS1
-  if is_in_array "$hash_type" ${LUKS_MODES}; then
+  if is_in_array "$hash_type" ${LUKS_MODES} && [[ "${GENERATE_CONTAINERS}" -eq 0 ]] ; then
     luks_tests_folder="${TDIR}/luks_tests/"
 
     if [ ! -d "${luks_tests_folder}" ]; then
@@ -4152,7 +4152,7 @@ if [ "${PACKAGE}" -eq 0 ] || [ -z "${PACKAGE_FOLDER}" ]; then
     if [ "${HT}" -eq 65535 ]; then
       for TMP_HT in ${HASH_TYPES}; do
 
-        if ! is_in_array "${TMP_HT}" ${LUKS_MODES}; then
+        if ! is_in_array "${TMP_HT}" ${LUKS_MODES} && [[ "${GENERATE_CONTAINERS}" -eq 0 ]] ; then
           if ! ( is_in_array "${TMP_HT}" ${LUKS2_MODES} && [[ "${GENERATE_CONTAINERS}" -eq 0 ]] ); then
             if ! is_in_array "${TMP_HT}" ${TC_MODES}; then
               if ! is_in_array "${TMP_HT}" ${VC_MODES}; then
@@ -4171,7 +4171,7 @@ if [ "${PACKAGE}" -eq 0 ] || [ -z "${PACKAGE_FOLDER}" ]; then
           continue
         fi
 
-        if ! is_in_array "${TMP_HT}" ${LUKS_MODES}; then
+        if ! is_in_array "${TMP_HT}" ${LUKS_MODES} && [[ "${GENERATE_CONTAINERS}" -eq 0 ]] ; then
           if ! ( is_in_array "${TMP_HT}" ${LUKS2_MODES} && [[ "${GENERATE_CONTAINERS}" -eq 0 ]] ); then
             if ! is_in_array "${TMP_HT}" ${TC_MODES}; then
               if ! is_in_array "${TMP_HT}" ${VC_MODES}; then
@@ -4323,7 +4323,7 @@ if [ "${PACKAGE}" -eq 0 ] || [ -z "${PACKAGE_FOLDER}" ]; then
               truecrypt_test "${hash_type}" 0
               truecrypt_test "${hash_type}" 1
               truecrypt_test "${hash_type}" 2
-            elif is_in_array "${hash_type}" ${LUKS_MODES}; then
+            elif is_in_array "${hash_type}" ${LUKS_MODES} && [[ "${GENERATE_CONTAINERS}" -eq 0 ]] ; then
               # run luks tests
               if [ ${hash_type} -eq 14600 ]; then
                 # for legacy mode
@@ -4406,7 +4406,7 @@ if [ "${PACKAGE}" -eq 1 ]; then
     copy_cl_dir=1
   else
     for TMP_HT in $(seq "${HT_MIN}" "${HT_MAX}"); do
-      if is_in_array "${TMP_HT}" ${LUKS_MODES}; then
+      if is_in_array "${TMP_HT}" ${LUKS_MODES} && [[ "${GENERATE_CONTAINERS}" -eq 0 ]] ; then
         copy_luks_dir=1
       elif is_in_array "${TMP_HT}" ${LUKS2_MODES} && [[ "${GENERATE_CONTAINERS}" -eq 0 ]]; then
         copy_luks2_dir=1

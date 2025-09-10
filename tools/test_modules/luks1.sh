@@ -1,0 +1,212 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ -z "${1:-}" ]]; then
+  echo "X Missing argument: LUKS mode"
+  cipher_modeode=""
+else
+  cipher_modeode=$1
+fi
+
+if [[ -z "${2:-}" ]]; then
+#   echo "X Missing argument: password"
+  password=""
+else
+  password=$2
+fi
+
+TDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../" && pwd )"
+
+#14600
+LUKS_TYPES=("luks1")
+HASHES=("sha1" "sha256" "sha512" "ripemd160" "whirlpool")
+CIPHERS=("aes" "serpent" "twofish")
+CIPHER_MODES=("cbc-essiv" "cbc-plain64" "xts-plain64")
+KEYSIZES=("128" "256" "512")
+
+size=20   # MiB
+
+OUTPUT_DIR="/tmp/out"
+mkdir -p "$OUTPUT_DIR"
+MOUNT_DIR="/tmp/mnt"
+mkdir -p "$MOUNT_DIR"
+
+create_luks_container() {
+  local PASSWORD="$1"
+  local filename="$2"
+  local luks_type="$3"
+  local cipher="$4"
+  local hash="$5"
+  local keysize="$6"
+  local size_mb="$7"
+  shift 7
+  local extra_opts=("$@")
+
+  echo  "Creating $filename (size ${size_mb}MiB) with password length ${#PASSWORD}: $PASSWORD..." >> /tmp/luks1.sh
+  dd if=/dev/zero of="$filename" bs=1M count="$size_mb" status=none
+
+  echo "sudo losetup --show -f "$filename"" >  /tmp/luks1.sh.log
+  loopdev=$(sudo losetup --show -f "$filename")
+
+cat >> /tmp/luks1.sh.log <<EOF
+sudo cryptsetup luksFormat \
+--batch-mode \
+--type "$luks_type" \
+--cipher "$cipher" \
+--key-size $keysize \
+--hash "$hash" \
+${extra_opts:+${extra_opts[@]}} \
+"$loopdev" <<< "$PASSWORD" # $filename
+EOF
+
+  if sudo cryptsetup luksFormat \
+      --batch-mode \
+      --type "$luks_type" \
+      --cipher "$cipher" \
+      --key-size $keysize \
+      --hash "$hash" \
+      "${extra_opts[@]}" \
+      "$loopdev" <<< "$PASSWORD"; then
+      true
+      echo "Formatted: $filename" >> /tmp/luks1.sh
+  else
+    echo "X Failed to format: $filename" >> /tmp/luks1.sh
+    sudo losetup -d "$loopdev"
+    rm -f "$filename"
+    return
+  fi
+
+  name="luks$(basename "$filename" | sha1sum | cut -c1-8)"
+
+  if [ -e "/dev/mapper/$name" ]; then
+    echo "! Device $name already exists. Closing it first." >> /tmp/luks1.sh
+    sudo cryptsetup close "$name" || true
+  fi
+
+  if sudo cryptsetup open "$loopdev" "$name" <<< "$PASSWORD"; then
+    true
+    echo "Decrypted: $filename" >> /tmp/luks1.sh
+  else
+    echo  "X Failed to decrypt: $filename" >> /tmp/luks1.sh
+    sudo losetup -d "$loopdev"
+    rm -f "$filename"
+    return
+  fi
+
+  sudo mkfs.ext4 -q /dev/mapper/"$name" 2>> /tmp/luks1.sh
+
+  mount_point="$MOUNT_DIR/$name"
+  mkdir -p "$mount_point"
+  sudo mount /dev/mapper/"$name" "$mount_point"
+
+  sudo sh -c 'echo "Hello from $filename" > "$mount_point/info.txt"'
+  while ! sudo umount "$mount_point"; do
+    # echo  "Waiting for $mount_point to become free..."
+    sleep 1
+  done
+  sudo cryptsetup close "$name"
+
+  echo  "ext4: $filename" >> /tmp/luks1.sh
+
+  sudo losetup -D
+}
+
+# These options don't generate for me on Ubuntu 24.04; cbc-essiv_128, cbc-essiv_256, cbc-essiv_512, xts-plain64_128, cbc-plain64_512
+# while true; do ./luks1.sh "14600" 'aaaaaaaa'; done 2>&1 | tee -a luks1.log
+# less luks1.log | grep -i failed -B1 | grep img | cut -d'/' -f4- | cut -d'_' -f2-4 | rev | cut -d'-' -f2- | rev | sort -u
+# ripemd160_aes-cbc-essiv_512
+# ripemd160_aes-cbc-plain64_512
+# ripemd160_serpent-cbc-essiv_512
+# ripemd160_serpent-cbc-plain64_512
+# ripemd160_twofish-cbc-essiv_128
+# ripemd160_twofish-cbc-essiv_256
+# ripemd160_twofish-cbc-essiv_512
+# ripemd160_twofish-cbc-plain64_512
+# ripemd160_twofish-xts-plain64_128
+# sha1_aes-cbc-essiv_128
+# sha1_aes-cbc-essiv_512
+# sha1_aes-cbc-plain64_512
+# sha1_aes-xts-plain64_128
+# sha1_serpent-cbc-essiv_256
+# sha1_serpent-cbc-essiv_512
+# sha1_serpent-cbc-plain64_512
+# sha1_twofish-cbc-essiv_128
+# sha1_twofish-cbc-essiv_256
+# sha1_twofish-cbc-essiv_512
+# sha1_twofish-xts-plain64_128
+# sha256_aes-cbc-essiv_128
+# sha256_aes-cbc-essiv_256
+# sha256_aes-cbc-essiv_512
+# sha256_aes-cbc-plain64_512
+# sha256_aes-xts-plain64_128
+# sha256_serpent-cbc-essiv_128
+# sha256_serpent-cbc-essiv_256
+# sha256_serpent-cbc-essiv_512
+# sha256_twofish-cbc-essiv_256
+# sha256_twofish-cbc-essiv_512
+# sha256_twofish-cbc-plain64_512
+# sha256_twofish-xts-plain64_128
+# sha512_aes-cbc-essiv_128
+# sha512_aes-cbc-plain64_512
+# sha512_aes-xts-plain64_128
+# sha512_serpent-cbc-essiv_128
+# sha512_serpent-cbc-essiv_256
+# sha512_serpent-cbc-essiv_512
+# sha512_twofish-cbc-essiv_128
+# sha512_twofish-cbc-essiv_256
+# sha512_twofish-cbc-plain64_512
+# sha512_twofish-xts-plain64_128
+# whirlpool_aes-cbc-plain64_512
+# whirlpool_aes-xts-plain64_128
+# whirlpool_serpent-cbc-essiv_128
+# whirlpool_serpent-cbc-essiv_256
+# whirlpool_serpent-cbc-essiv_512
+# whirlpool_serpent-cbc-plain64_512
+# whirlpool_twofish-cbc-essiv_128
+# whirlpool_twofish-cbc-essiv_256
+# whirlpool_twofish-cbc-essiv_512
+# whirlpool_twofish-cbc-plain64_512
+
+# --- random picks ---
+while true; do
+  luks_type=${LUKS_TYPES[$RANDOM % ${#LUKS_TYPES[@]}]}
+  cipher=${CIPHERS[$RANDOM % ${#CIPHERS[@]}]}
+  cipher_mode=${CIPHER_MODES[$RANDOM % ${#CIPHER_MODES[@]}]}
+  cipher=${cipher}-${cipher_mode}
+  hash=${HASHES[$RANDOM % ${#HASHES[@]}]}
+  keysize=${KEYSIZES[$RANDOM % ${#KEYSIZES[@]}]}
+
+  # filter out not supported combinations:
+  case "$keysize" in
+    128)
+      case "$cipher_mode" in
+        cbc-essiv|xts-plain64) continue ;;   # skip this pick, try again
+      esac
+      ;;
+    256)
+      case "$cipher_mode" in
+        cbc-essiv) continue ;;   # skip this pick, try again
+      esac
+      ;;
+    512)
+      case "$cipher_mode" in
+        cbc-essiv|cbc-plain64) continue ;;   # skip this pick, try again
+      esac
+      ;;
+  esac
+
+  break # we good
+
+done
+
+# file="${OUTPUT_DIR}/luks2-${cipher_name}-${kdf}-t${time}-m${memory}-p${threads}-size${size}MiB_$(date +%Y%m%d%H%M%S%6N).img"
+file="${OUTPUT_DIR}/${luks_type}_${hash}_${cipher}_${keysize}-size${size}MiB_$(date +%Y%m%d%H%M%S%6N).img"
+
+# echo "Creating $file"
+
+create_luks_container "$password" "$file" "$luks_type" "$cipher" "$hash" "$keysize" "$size"
+
+${TDIR}/luks2hashcat.py $file | grep -vE '^[0-9]+$' > $file.hash
+
+echo "$file.hash"
+# echo ""
