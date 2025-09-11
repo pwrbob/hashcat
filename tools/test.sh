@@ -169,6 +169,24 @@ function is_in_array()
   return 1
 }
 
+function has_multi_hash()
+{
+  # no multi hash checks for these modes (because we only have 1 hash for each of them)
+  if   [ "${hash_type}" -eq 14000 ]; then
+    return 0;
+  elif [ "${hash_type}" -eq 14100 ]; then
+    return 0;
+  elif [ "${hash_type}" -eq 14600 ]; then
+    return 0;
+  elif [ "${hash_type}" -eq 14900 ]; then
+    return 0;
+  elif [ "${hash_type}" -eq 15400 ]; then
+    return 0;
+  fi
+
+  # all other modes have multi hash
+  return 1;
+}
 function init()
 {
   if [ "${PACKAGE}" -eq 1 ]; then
@@ -442,18 +460,7 @@ function init()
   if [ "${MODE}" -ge 1 ]; then
 
     # no multi hash checks for these modes (because we only have 1 hash for each of them)
-
-    if   [ "${hash_type}" -eq 14000 ]; then
-      return
-    elif [ "${hash_type}" -eq 14100 ]; then
-      return
-    elif [ "${hash_type}" -eq 14600 ]; then
-      return
-    elif [ "${hash_type}" -eq 14900 ]; then
-      return
-    elif [ "${hash_type}" -eq 15400 ]; then
-      return
-    fi
+    ! has_multi_hash || return
 
     i=2
 
@@ -766,18 +773,7 @@ function attack_0()
   if [ "${MODE}" -ne 0 ]; then
 
     # no multi hash checks for these modes (because we only have 1 hash for each of them)
-
-    if   [ "${hash_type}" -eq 14000 ]; then
-      return
-    elif [ "${hash_type}" -eq 14100 ]; then
-      return
-    elif [ "${hash_type}" -eq 14600 ]; then
-      return
-    elif [ "${hash_type}" -eq 14900 ]; then
-      return
-    elif [ "${hash_type}" -eq 15400 ]; then
-      return
-    fi
+    ! has_multi_hash || return
 
     e_ce=0
     e_rs=0
@@ -1095,18 +1091,7 @@ function attack_1()
   if [ "${MODE}" -ne 0 ]; then
 
     # no multi hash checks for these modes (because we only have 1 hash for each of them)
-
-    if   [ "${hash_type}" -eq 14000 ]; then
-      return
-    elif [ "${hash_type}" -eq 14100 ]; then
-      return
-    elif [ "${hash_type}" -eq 14600 ]; then
-      return
-    elif [ "${hash_type}" -eq 14900 ]; then
-      return
-    elif [ "${hash_type}" -eq 15400 ]; then
-      return
-    fi
+    ! has_multi_hash || return
 
     e_ce=0
     e_rs=0
@@ -1410,18 +1395,7 @@ function attack_3()
   if [ "${MODE}" -ne 0 ]; then
 
     # no multi hash checks for these modes (because we only have 1 hash for each of them)
-
-    if   [ "${hash_type}" -eq 14000 ]; then
-      return
-    elif [ "${hash_type}" -eq 14100 ]; then
-      return
-    elif [ "${hash_type}" -eq 14600 ]; then
-      return
-    elif [ "${hash_type}" -eq 14900 ]; then
-      return
-    elif [ "${hash_type}" -eq 15400 ]; then
-      return
-    fi
+    ! has_multi_hash || return
 
     e_ce=0
     e_rs=0
@@ -2079,18 +2053,7 @@ function attack_6()
   if [ "${MODE}" -ne 0 ]; then
 
     # no multi hash checks for these modes (because we only have 1 hash for each of them)
-
-    if   [ "${hash_type}" -eq 14000 ]; then
-      return
-    elif [ "${hash_type}" -eq 14100 ]; then
-      return
-    elif [ "${hash_type}" -eq 14600 ]; then
-      return
-    elif [ "${hash_type}" -eq 14900 ]; then
-      return
-    elif [ "${hash_type}" -eq 15400 ]; then
-      return
-    fi
+    ! has_multi_hash || return
 
     e_ce=0
     e_rs=0
@@ -2524,18 +2487,7 @@ function attack_7()
   if [ "${MODE}" -ne 0 ]; then
 
     # no multi hash checks for these modes (because we only have 1 hash for each of them)
-
-    if   [ "${hash_type}" -eq 14000 ]; then
-      return
-    elif [ "${hash_type}" -eq 14100 ]; then
-      return
-    elif [ "${hash_type}" -eq 14600 ]; then
-      return
-    elif [ "${hash_type}" -eq 14900 ]; then
-      return
-    elif [ "${hash_type}" -eq 15400 ]; then
-      return
-    fi
+    ! has_multi_hash || return
 
     e_ce=0
     e_rs=0
