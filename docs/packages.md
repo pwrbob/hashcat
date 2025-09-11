@@ -1,5 +1,5 @@
 
-This page contains information about packages for hashcat, with guidance [#for-users](for users) and [#for-package-maintainers](for package maintainers).
+This page contains information about packages for hashcat, with guidance [for users](#for-users) and [for package maintainers](#for-package-maintainers).
 
 ## For users ##
 
