@@ -122,7 +122,7 @@ int hashconfig_init (hashcat_ctx_t *hashcat_ctx)
 
   if (rc_load == false) return -1;
 
-  module_ctx->module_comment = MODULE_DEFAULT; // set all module to have no comment by default; such that this property doesn't have to be declared explicitly by all modules (such that we don't break private plugins without this options)
+  module_ctx->module_notice_usage = MODULE_DEFAULT; // set all module to have usage_notice by default; such that this property doesn't have to be declared explicitly by all modules (such that we don't break private plugins without this options)
   module_ctx->module_init (module_ctx);
 
   if (module_ctx->module_context_size != MODULE_CONTEXT_SIZE_CURRENT)

@@ -960,14 +960,14 @@ void hash_info_single (hashcat_ctx_t *hashcat_ctx, user_options_extra_t *user_op
     event_log_info (hashcat_ctx, "  Deprecated.Notice...: %s", t_deprecated_notice);
 
 
-    char *t_module_comment = "N/A";
+    char *t_module_notice_usage = "N/A";
 
-    if (module_ctx->module_comment != MODULE_DEFAULT)
+    if (module_ctx->module_notice_usage != MODULE_DEFAULT)
     {
-      t_module_comment = (char *) module_ctx->module_comment (hashconfig, hashcat_ctx->user_options, user_options_extra);
+      t_module_notice_usage = (char *) module_ctx->module_notice_usage (hashconfig, hashcat_ctx->user_options, user_options_extra);
     }
 
-    event_log_info (hashcat_ctx, "  Module.Comment......: %s", t_module_comment);
+    event_log_info (hashcat_ctx, "  Usage.Notice........: %s", t_module_notice_usage);
 
 
     char *t_pw_desc = "plain";
