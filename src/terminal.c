@@ -967,7 +967,17 @@ void hash_info_single (hashcat_ctx_t *hashcat_ctx, user_options_extra_t *user_op
       t_module_notice_usage = (char *) module_ctx->module_notice_usage (hashconfig, hashcat_ctx->user_options, user_options_extra);
     }
 
-    event_log_info (hashcat_ctx, "  Usage.Notice........: %s", t_module_notice_usage);
+    event_log_info (hashcat_ctx, "  Notice.Usage........: %s", t_module_notice_usage);
+
+
+    char *t_module_notice_warning = "N/A";
+
+    if (module_ctx->module_notice_warning != MODULE_DEFAULT)
+    {
+      t_module_notice_warning = (char *) module_ctx->module_notice_warning (hashconfig, hashcat_ctx->user_options, user_options_extra);
+    }
+
+    event_log_info (hashcat_ctx, "  Notice.Warning........: %s", t_module_notice_warning);
 
 
     char *t_pw_desc = "plain";

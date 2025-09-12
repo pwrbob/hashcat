@@ -1011,6 +1011,13 @@ static int outer_loop (hashcat_ctx_t *hashcat_ctx)
 
       inner_threads_cnt++;
     }
+
+    if (module_ctx->module_notice_warning != MODULE_DEFAULT)
+    {
+      char *t_module_notice_warning = (char *) module_ctx->module_notice_warning (hashconfig, hashcat_ctx->user_options, user_options_extra);
+      event_log_advice(hashcat_ctx, "Module warning: %s", t_module_notice_warning);
+    }
+
   }
 
   // main call
