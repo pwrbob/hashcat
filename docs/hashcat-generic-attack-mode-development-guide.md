@@ -210,19 +210,13 @@ Attack mode 8 includes two skeletons: one in `C` and one in `Rust`. Place your i
 
 Put your code in `src/feeds/` and prefix it with `feed_`, for example `src/feeds/feed_wordlist.c`. It will be compiled automatically. Adding a matching header file such as `feed_wordlist.h` is recommended.
 
-Here's a C Skeleton:
-
-```
-```
+C Skeleton: `src/feeds/feed_dummy.c`
 
 ### Rust
 
 Create your project with `cargo init myfeed --lib` and move it into the `Rust/feeds/` folder. It will be compiled automatically.
 
-Here's a Rust Skeleton:
-
-```
-```
+Rust Skeleton: `Rust/feeds/dummy`
 
 ## Options
 
