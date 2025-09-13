@@ -44,6 +44,9 @@ OPENCL_ABBREV = {
 OPENCL_ABBREV_SORT_ORDER = ["p", "o", "a0p", "a0o", "a1p", "a1o", "a3p", "a3o"]
 order_map = {v: i for i, v in enumerate(OPENCL_ABBREV_SORT_ORDER)}
 
+def md_remove_backticks_and_pipes(msg):
+    return msg.replace('`', '').replace('|', '')
+
 def sort_abbrevs(links):
     """Sort markdown links by their abbreviation order."""
     return sorted(links, key=lambda link: order_map.get(link.split("]")[0][1:], 999))
@@ -176,6 +179,7 @@ def main():
             footnote += f"[^{footnote_map[footnote_val]}]"
 
         if usage_notice != "N/A":
+            usage_notice = md_remove_backticks_and_pipes(usage_notice)
             footnote_val = f"Usage notice: `{usage_notice}`"
             if footnote_val not in footnote_map:
                 footnote_map[footnote_val] = footnote_counter
@@ -183,6 +187,7 @@ def main():
             footnote += f"[^{footnote_map[footnote_val]}]"
 
         if advice_notice != "N/A":
+            advice_notice = md_remove_backticks_and_pipes(advice_notice)
             footnote_val = f"Usage notice: `{advice_notice}`"
             if footnote_val not in footnote_map:
                 footnote_map[footnote_val] = footnote_counter
@@ -196,6 +201,9 @@ def main():
         # Make sure we refer to root for display
         opencl_links = opencl_links.replace('/../../', '/')
         test_link = test_link.replace('/../../', '/')
+
+        name = md_remove_backticks_and_pipes(name)
+        example_hash = md_remove_backticks_and_pipes(example_hash)
 
         row = f"| [`{key}`](/src/modules/module_{zfilled_key}.c) | `{name}`{footnote} | <sup> {opencl_links} </sup> | {test_link} | `{example_hash}` |"
         table_rows.append(row)
