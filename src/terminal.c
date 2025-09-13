@@ -960,24 +960,24 @@ void hash_info_single (hashcat_ctx_t *hashcat_ctx, user_options_extra_t *user_op
     event_log_info (hashcat_ctx, "  Deprecated.Notice...: %s", t_deprecated_notice);
 
 
-    char *t_module_notice_usage = "N/A";
+    char *t_module_usage_notice = "N/A";
 
-    if (module_ctx->module_notice_usage != MODULE_DEFAULT)
+    if (module_ctx->module_usage_notice != MODULE_DEFAULT)
     {
-      t_module_notice_usage = (char *) module_ctx->module_notice_usage (hashconfig, hashcat_ctx->user_options, user_options_extra);
+      t_module_usage_notice = (char *) module_ctx->module_usage_notice (hashconfig, hashcat_ctx->user_options, user_options_extra);
     }
 
-    event_log_info (hashcat_ctx, "  Notice.Usage........: %s", t_module_notice_usage);
+    event_log_info (hashcat_ctx, "  Usage.Notice........: %s", t_module_usage_notice);
 
 
-    char *t_module_notice_warning = "N/A";
+    char *t_module_advice_notice = "N/A";
 
-    if (module_ctx->module_notice_warning != MODULE_DEFAULT)
+    if (module_ctx->module_advice_notice != MODULE_DEFAULT)
     {
-      t_module_notice_warning = (char *) module_ctx->module_notice_warning (hashconfig, hashcat_ctx->user_options, user_options_extra);
+      t_module_advice_notice = (char *) module_ctx->module_advice_notice (hashconfig, hashcat_ctx->user_options, user_options_extra);
     }
 
-    event_log_info (hashcat_ctx, "  Notice.Warning........: %s", t_module_notice_warning);
+    event_log_info (hashcat_ctx, "  Advice.Notice.......: %s", t_module_advice_notice);
 
 
     char *t_pw_desc = "plain";

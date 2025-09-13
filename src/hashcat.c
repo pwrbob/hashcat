@@ -1012,10 +1012,10 @@ static int outer_loop (hashcat_ctx_t *hashcat_ctx)
       inner_threads_cnt++;
     }
 
-    if (module_ctx->module_notice_warning != MODULE_DEFAULT)
+    if (module_ctx->module_advice_notice != MODULE_DEFAULT)
     {
-      char *t_module_notice_warning = (char *) module_ctx->module_notice_warning (hashconfig, hashcat_ctx->user_options, user_options_extra);
-      event_log_advice(hashcat_ctx, "Module warning: %s", t_module_notice_warning);
+      char *t_module_advice_notice = (char *) module_ctx->module_advice_notice (hashconfig, hashcat_ctx->user_options, user_options_extra);
+      event_log_advice(hashcat_ctx, "Module advice notice: %s", t_module_advice_notice);
     }
 
   }
