@@ -102,7 +102,7 @@ void generic_thread_term (hashcat_ctx_t *hashcat_ctx, const int device_id)
   }
 }
 
-int generic_thread_next (hashcat_ctx_t *hashcat_ctx, const int device_id, const u8 **out_buf)
+int generic_thread_next (hashcat_ctx_t *hashcat_ctx, const int device_id, u8 *out_buf)
 {
   generic_ctx_t *generic_ctx = hashcat_ctx->generic_ctx;
 

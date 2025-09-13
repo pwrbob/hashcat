@@ -1402,24 +1402,20 @@ static int calc (hashcat_ctx_t *hashcat_ctx, hc_device_param_t *device_param)
 
           for (u64 work_cur = 0; work_cur < work_cnt; work_cur++)
           {
-            const u8 *out_buf = NULL;
+            pw_idx_t *pw_idx = device_param->pws_idx + device_param->pws_cnt;
 
-            const int out_len = generic_thread_next (hashcat_ctx, device_param->device_id, &out_buf);
+            u8 *pw_buf = (u8 *) (device_param->pws_comp + pw_idx->off);
 
-            if ((out_len == -1) || (out_buf == NULL))
+            int pw_len = generic_thread_next (hashcat_ctx, device_param->device_id, pw_buf);
+
+            if (pw_len == -1)
             {
               words_extra = 0; // no more data available
 
               break;
             }
 
-            pw_idx_t *pw_idx = device_param->pws_idx + device_param->pws_cnt;
-
-            u8 *pw_buf = (u8 *) (device_param->pws_comp + pw_idx->off);
-
-            int pw_len = MIN (out_len, PW_MAX);
-
-            memcpy (pw_buf, out_buf, pw_len);
+            pw_len = MIN (pw_len, PW_MAX);  // truncate if > 256  -- note: not rejected!
 
             if (mods == true)
             {
