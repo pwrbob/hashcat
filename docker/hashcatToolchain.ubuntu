@@ -13,7 +13,7 @@ ARG UBUNTU_VERSION
 ARG BINUTILS_VERSION=2.45
 ARG MINGW_VERSION=13.0.0
 ARG GCC_VERSION=15.2.0
-ARG CLANG_VERSION=21.1.0
+ARG CLANG_VERSION=21.1.1
 ARG CMAKE_VERSION=4.1.1
 ARG SEVEN_ZIP_VERSION=25.01
 ARG WIN_ICONV_VERSION=v0.0.10
@@ -22,8 +22,6 @@ ARG WIN_PYTHON_VERSION=3.12.11-1
 ARG OPENSSL_VERSION=OpenSSL_1_1_1w
 ARG RUST_VERSION=1.89.0
 ARG MAX_CORES=12
-ARG ENABLE_LTO=1
-ARG WITH_CODE_ANALYSIS=0
 ARG WD=/root
 
 ENV UBUNTU_VERSION=${UBUNTU_VERSION} \
@@ -39,8 +37,6 @@ ENV UBUNTU_VERSION=${UBUNTU_VERSION} \
     OPENSSL_VERSION=${OPENSSL_VERSION} \
     RUST_VERSION=${RUST_VERSION} \
     MAX_CORES=${MAX_CORES} \
-    ENABLE_LTO=${ENABLE_LTO} \
-    WITH_CODE_ANALYSIS=${WITH_CODE_ANALYSIS} \
     WD=${WD}
 
 ## Install dependencies
@@ -70,38 +66,38 @@ RUN mkdir -p $WD/src $WD/build $WD/install/native $WD/install/cross /opt/win-pyt
 
 WORKDIR $WD/src
 
-# Binutils, GCC, Clang, Python, MinGW
+# Binutils, GCC, Clang, Python
 
-RUN download_tarball() { URL="$1"; FNAME="$2"; wget -t 3 -c --https-only "$URL" -O "$FNAME"; tar -xf "$FNAME"; rm -f "$FNAME"; }; \
+RUN download_tarball() { URL="$1"; FNAME="$2"; wget --no-verbose -t 3 -c --https-only "$URL" -O "$FNAME"; tar -xf "$FNAME"; rm -f "$FNAME"; }; \
     download_tarball "https://ftpmirror.gnu.org/gnu/binutils/binutils-${BINUTILS_VERSION}.tar.xz" "binutils-${BINUTILS_VERSION}.tar.xz"; \
     download_tarball "https://ftpmirror.gnu.org/gnu/gcc/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.xz" "gcc-${GCC_VERSION}.tar.xz"; \
     download_tarball "https://github.com/llvm/llvm-project/releases/download/llvmorg-${CLANG_VERSION}/llvm-project-${CLANG_VERSION}.src.tar.xz" "llvm-project-${CLANG_VERSION}.src.tar.xz"; \
     mv "llvm-project-${CLANG_VERSION}.src" llvm-project; \
-    download_tarball "https://www.python.org/ftp/python/${LINUX_PYTHON_VERSION}/Python-${LINUX_PYTHON_VERSION}.tgz" "Python-${LINUX_PYTHON_VERSION}.tgz"; \
-    download_tarball "https://github.com/mingw-w64/mingw-w64/archive/refs/tags/v${MINGW_VERSION}.tar.gz" "mingw-w64-${MINGW_VERSION}.tar.gz"; mv "mingw-w64-${MINGW_VERSION}" mingw-w64
+    download_tarball "https://www.python.org/ftp/python/${LINUX_PYTHON_VERSION}/Python-${LINUX_PYTHON_VERSION}.tgz" "Python-${LINUX_PYTHON_VERSION}.tgz"
 
-# 7zip, win-iconv, openssl
+# 7zip, win-iconv, OpenSSL, MinGW
 
 RUN git clone --depth 1 --branch ${SEVEN_ZIP_VERSION} https://github.com/ip7z/7zip.git && \
     git clone --depth 1 --branch ${WIN_ICONV_VERSION} https://github.com/win-iconv/win-iconv.git && \
-    git clone --depth 1 --branch ${OPENSSL_VERSION} https://github.com/openssl/openssl
+    git clone --depth 1 --branch ${OPENSSL_VERSION} https://github.com/openssl/openssl && \
+    git clone --depth 1 --branch v${MINGW_VERSION} https://github.com/mingw-w64/mingw-w64
 
 # CMake
 
-RUN wget -t 3 -c --https-only --no-verbose https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-x86_64.sh && \
+RUN wget --no-verbose -t 3 -c --https-only https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-x86_64.sh && \
     chmod +x cmake-${CMAKE_VERSION}-linux-x86_64.sh
 
-# win-python
+# Python (windows)
 
 WORKDIR /opt/win-python
 
-RUN wget -t 3 -c --https-only --no-verbose https://repo.msys2.org/mingw/mingw64/mingw-w64-x86_64-python-${WIN_PYTHON_VERSION}-any.pkg.tar.zst && \
+RUN wget --no-verbose -t 3 -c --https-only https://repo.msys2.org/mingw/mingw64/mingw-w64-x86_64-python-${WIN_PYTHON_VERSION}-any.pkg.tar.zst && \
     unzstd mingw-w64-x86_64-python-${WIN_PYTHON_VERSION}-any.pkg.tar.zst && tar -xf mingw-w64-x86_64-python-${WIN_PYTHON_VERSION}-any.pkg.tar && \
     rm -rf mingw-w64-x86_64-python-${WIN_PYTHON_VERSION}-any.pkg.*
 
 ## Build
 
-# openssl
+# OpenSSL
 
 WORKDIR $WD/src/openssl
 
@@ -115,7 +111,7 @@ WORKDIR $WD/src
 
 RUN rm -rf openssl
 
-# python
+# Python (linux)
 
 WORKDIR $WD/src/Python-${LINUX_PYTHON_VERSION}
 
@@ -159,14 +155,14 @@ WORKDIR $WD/build/gcc-native
 
 RUN $WD/src/gcc-${GCC_VERSION}/configure \
     --prefix=$WD/install/native \
-    --enable-languages=c,c++ --disable-multilib \
+    --build=x86_64-linux-gnu --host=x86_64-linux-gnu --target=x86_64-linux-gnu \
+    --enable-languages=c,c++,lto --disable-multilib --disable-werror \
     --enable-shared --enable-static \
     --enable-lto --enable-plugin \
     --enable-threads=posix \
-    --enable-linker-build-id --enable-nls --enable-bootstrap --enable-clocale=gnu --enable-libstdcxx-time=yes \
-    --with-default-libstdcxx-abi=new --enable-gnu-unique-object --disable-vtable-verify --enable-libmpx --enable-default-pie \
-    --with-system-zlib --with-target-system-zlib --disable-werror --with-tune=generic --enable-offload-targets=nvptx-none \
-    --without-cuda-driver --enable-checking=release --build=x86_64-linux-gnu --host=x86_64-linux-gnu --target=x86_64-linux-gnu \
+    --enable-linker-build-id --enable-nls --enable-bootstrap --enable-clocale=gnu --enable-libstdcxx-time=yes --with-default-libstdcxx-abi=new \
+    --enable-gnu-unique-object --disable-vtable-verify --enable-libmpx --enable-default-pie --with-system-zlib --with-target-system-zlib \
+    --with-tune=generic --enable-offload-targets=nvptx-none --without-cuda-driver --enable-checking=release \
     && CORES=$(nproc); if [ "$CORES" -gt "$MAX_CORES" ]; then CORES=$MAX_CORES; fi; \
     make -j${CORES} V=0 && make install V=0
 
@@ -281,7 +277,7 @@ WORKDIR $WD/build/gcc-stage2
 RUN $WD/src/gcc-${GCC_VERSION}/configure \
     --prefix=$WD/install/cross \
     --target=x86_64-w64-mingw32 \
-    --enable-languages=c,c++ --disable-multilib --with-default-msvcrt=msvcrt \
+    --enable-languages=c,c++,lto --disable-multilib --with-default-msvcrt=msvcrt \
     --enable-shared --enable-static \
     --enable-lto --enable-plugin \
     --enable-threads=win32 \
@@ -374,6 +370,11 @@ ENV PATH=$WD/install/clang/bin:$PATH \
 ## hashcat cross-build section
 
 ARG CACHE_BUST=1
+ARG ENABLE_LTO=1
+ARG MAINTAINER_MODE=0
+
+ENV ENABLE_LTO=${ENABLE_LTO} \
+    MAINTAINER_MODE=${MAINTAINER_MODE}
 
 WORKDIR /root
 
@@ -391,7 +392,9 @@ RUN cp -af hashcat hashcat-gcc && cp -af hashcat hashcat-clang
 
 WORKDIR /root/hashcat-gcc
 
-RUN make ENABLE_LTO=${ENABLE_LTO} binaries -s -j 2>&1 | stdbuf -oL -eL  tee -a /root/binaries.gcc.log
+RUN make ENABLE_LTO=${ENABLE_LTO} \
+         MAINTAINER_MODE=${MAINTAINER_MODE} \
+         binaries -s -j 2>&1 | stdbuf -oL -eL  tee -a /root/binaries.gcc.log
 
 RUN tools/package_bin.sh
 
@@ -407,6 +410,7 @@ RUN cd /root/xy && \
 WORKDIR /root/hashcat-clang
 
 RUN make ENABLE_LTO=${ENABLE_LTO} \
+         MAINTAINER_MODE=${MAINTAINER_MODE} \
          AR=llvm-ar AR_LINUX=llvm-ar AR_WIN=llvm-ar \
          CC=clang CC_LINUX=clang CC_WIN=clang \
          CXX=clang++ CXX_LINUX=clang++ CXX_WIN=clang++ \
@@ -427,6 +431,9 @@ WORKDIR /root
 
 RUN mv /root/out/* /root/xy/ && rm -rf /root/out /root/hashcat-* $WD/src $WD/build /tmp/* /var/tmp/*
 
+ARG WITH_CODE_ANALYSIS=0
+ENV WITH_CODE_ANALYSIS=${WITH_CODE_ANALYSIS}
+
 RUN echo "Toolchain config: " | tee -a /root/toolchain-info.log && \
     echo "UBUNTU_VERSION: ${UBUNTU_VERSION}" | tee -a /root/toolchain-info.log && \
     echo "BINUTILS_VERSION: ${BINUTILS_VERSION}" | tee -a /root/toolchain-info.log && \
@@ -441,6 +448,7 @@ RUN echo "Toolchain config: " | tee -a /root/toolchain-info.log && \
     echo "RUST_VERSION: ${RUST_VERSION}" | tee -a /root/toolchain-info.log && \
     echo "MAX_CORES: ${MAX_CORES}" | tee -a /root/toolchain-info.log && \
     echo "ENABLE_LTO: ${ENABLE_LTO}" | tee -a /root/toolchain-info.log && \
+    echo "MAINTAINER_MODE: ${MAINTAINER_MODE}" | tee -a /root/toolchain-info.log && \
     echo "WITH_CODE_ANALYSIS: ${WITH_CODE_ANALYSIS}" | tee -a /root/toolchain-info.log && \
     echo "WD: ${WD}" | tee -a /root/toolchain-info.log && \
     echo -n "GLIBC_VERSION: " | tee -a /root/toolchain-info.log && \
@@ -456,9 +464,9 @@ RUN if [ "$WITH_CODE_ANALYSIS" -eq "1" ]; then \
       echo "Checks: 'clang-analyzer-*,cppcoreguidelines-*,-cppcoreguidelines-avoid-magic-numbers,modernize-*,performance-*,-modernize-use-trailing-return-type,-clang-diagnostic-unused-command-line-argument'" > /root/hashcat/.clang-tidy && \
       echo "HeaderFilterRegex: 'src/.*'" >> /root/hashcat/.clang-tidy && \
       cd /root/hashcat && make clean -s && \
-      intercept-build make ENABLE_LTO=${ENABLE_LTO} AR=llvm-ar AR_LINUX=llvm-ar AR_WIN=llvm-ar CC=clang CC_LINUX=clang CC_WIN=clang CXX=clang++ CXX_LINUX=clang++ CXX_WIN=clang++ linux -s -j && \
+      intercept-build make ENABLE_LTO=${ENABLE_LTO} MAINTAINER_MODE=${MAINTAINER_MODE} AR=llvm-ar AR_LINUX=llvm-ar AR_WIN=llvm-ar CC=clang CC_LINUX=clang CC_WIN=clang CXX=clang++ CXX_LINUX=clang++ CXX_WIN=clang++ linux -s -j && \
       run-clang-tidy -p=. -export-fixes=/root/code-analysis/clang-tidy/fixes.yaml -quiet > /root/code-analysis/clang-tidy/output.log 2>&1 && make clean -s && \
-      scan-build -o /root/code-analysis/scan-build make ENABLE_LTO=${ENABLE_LTO} AR=llvm-ar AR_LINUX=llvm-ar AR_WIN=llvm-ar CC=clang CC_LINUX=clang CC_WIN=clang CXX=clang++ CXX_LINUX=clang++ CXX_WIN=clang++ linux -s -j > /root/code-analysis/scan-build/output.log 2>&1 && make clean -s; \
+      scan-build -o /root/code-analysis/scan-build make ENABLE_LTO=${ENABLE_LTO} MAINTAINER_MODE=${MAINTAINER_MODE} AR=llvm-ar AR_LINUX=llvm-ar AR_WIN=llvm-ar CC=clang CC_LINUX=clang CC_WIN=clang CXX=clang++ CXX_LINUX=clang++ CXX_WIN=clang++ linux -s -j > /root/code-analysis/scan-build/output.log 2>&1 && make clean -s; \
     fi
 
 CMD ["/bin/bash"]

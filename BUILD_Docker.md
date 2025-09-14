@@ -8,7 +8,7 @@ Using the **Hashcat toolchain** docker, two versions of hashcat will be created,
 ### Building ###
 
 ```bash
-docker build --build-arg UBUNTU_VERSION=16.04 -f docker/hashcatToolchain.ubuntu -t hashcat-toolchain:16.04 .
+docker build --build-arg UBUNTU_VERSION=16.04 --build-arg MAINTAINER_MODE=1 -f docker/hashcatToolchain.ubuntu -t hashcat-toolchain:16.04 .
 ```
 
 This will create a Docker image based on Ubuntu 16.04 with a custom toolchain (note that the Ubuntu versions tested are from 16.04 to 22.04).
@@ -30,7 +30,7 @@ docker run --rm \
   -e HOST_UID=$(id -u) \
   -e HOST_GID=$(id -g) \
   -v $(pwd):/out \
-  hashcat-toolchain:16.64 \
+  hashcat-toolchain:16.04 \
   bash -c "cp /root/xy/hashcat-*.7z /out && chown \$HOST_UID:\$HOST_GID /out/hashcat-*.7z"
 ```
 
