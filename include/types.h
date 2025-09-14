@@ -2775,9 +2775,9 @@ typedef struct generic_thread_ctx
 
 } generic_thread_ctx_t;
 
-typedef bool (*GENERIC_GLOBAL_INIT)     (generic_global_ctx_t *, generic_thread_ctx_t *, void *hashcat_ctx);
-typedef void (*GENERIC_GLOBAL_TERM)     (generic_global_ctx_t *, generic_thread_ctx_t *, void *hashcat_ctx);
-typedef u64  (*GENERIC_GLOBAL_KEYSPACE) (generic_global_ctx_t *, generic_thread_ctx_t *, void *hashcat_ctx);
+typedef bool (*GENERIC_GLOBAL_INIT)     (generic_global_ctx_t *, generic_thread_ctx_t **, void *);
+typedef void (*GENERIC_GLOBAL_TERM)     (generic_global_ctx_t *, generic_thread_ctx_t **, void *);
+typedef u64  (*GENERIC_GLOBAL_KEYSPACE) (generic_global_ctx_t *, generic_thread_ctx_t **, void *);
 
 typedef bool (*GENERIC_THREAD_INIT)     (generic_global_ctx_t *, generic_thread_ctx_t *);
 typedef void (*GENERIC_THREAD_TERM)     (generic_global_ctx_t *, generic_thread_ctx_t *);
@@ -2789,7 +2789,7 @@ typedef struct generic_ctx
   bool enabled;
 
   generic_global_ctx_t  global_ctx;
-  generic_thread_ctx_t  thread_ctx[DEVICES_MAX];
+  generic_thread_ctx_t *thread_ctx;
 
   char *dynlib_filename;
 

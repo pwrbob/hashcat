@@ -57,7 +57,7 @@ static size_t process_word (const u8 *buf, const size_t len, u8 *out_buf)
   return report_len;
 }
 
-bool global_init (MAYBE_UNUSED generic_global_ctx_t *global_ctx, MAYBE_UNUSED generic_thread_ctx_t *thread_ctx[DEVICES_MAX], MAYBE_UNUSED hashcat_ctx_t *hashcat_ctx)
+bool global_init (MAYBE_UNUSED generic_global_ctx_t *global_ctx, MAYBE_UNUSED generic_thread_ctx_t **thread_ctx, MAYBE_UNUSED hashcat_ctx_t *hashcat_ctx)
 {
   // create our own context
 
@@ -83,7 +83,7 @@ bool global_init (MAYBE_UNUSED generic_global_ctx_t *global_ctx, MAYBE_UNUSED ge
   return true;
 }
 
-void global_term (MAYBE_UNUSED generic_global_ctx_t *global_ctx, MAYBE_UNUSED generic_thread_ctx_t *thread_ctx[DEVICES_MAX], MAYBE_UNUSED hashcat_ctx_t *hashcat_ctx)
+void global_term (MAYBE_UNUSED generic_global_ctx_t *global_ctx, MAYBE_UNUSED generic_thread_ctx_t **thread_ctx, MAYBE_UNUSED hashcat_ctx_t *hashcat_ctx)
 {
   feed_global_t *feed_global = global_ctx->gbldata;
 
@@ -94,7 +94,7 @@ void global_term (MAYBE_UNUSED generic_global_ctx_t *global_ctx, MAYBE_UNUSED ge
   global_ctx->gbldata = NULL;
 }
 
-u64 global_keyspace (MAYBE_UNUSED generic_global_ctx_t *global_ctx, MAYBE_UNUSED generic_thread_ctx_t *thread_ctx[DEVICES_MAX], MAYBE_UNUSED hashcat_ctx_t *hashcat_ctx)
+u64 global_keyspace (MAYBE_UNUSED generic_global_ctx_t *global_ctx, MAYBE_UNUSED generic_thread_ctx_t **thread_ctx, MAYBE_UNUSED hashcat_ctx_t *hashcat_ctx)
 {
   feed_global_t *feed_global = global_ctx->gbldata;
 
