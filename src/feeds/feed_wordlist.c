@@ -150,8 +150,6 @@ bool thread_init (MAYBE_UNUSED generic_global_ctx_t *global_ctx, MAYBE_UNUSED ge
 {
   feed_global_t *feed_global = global_ctx->gbldata;
 
-  thread_ctx->thrdata = feed_global;
-
   feed_thread_t *feed_thread = hcmalloc (sizeof (feed_thread_t));
 
   if (feed_thread == NULL)
