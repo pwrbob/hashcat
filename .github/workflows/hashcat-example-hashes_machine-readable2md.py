@@ -180,7 +180,7 @@ def main():
 
         if usage_notice != "N/A":
             usage_notice = md_remove_backticks_and_pipes(usage_notice)
-            footnote_val = f"Usage notice: `{usage_notice}`"
+            footnote_val = f"Module usage notice: `{usage_notice}`"
             if footnote_val not in footnote_map:
                 footnote_map[footnote_val] = footnote_counter
                 footnote_counter += 1
@@ -188,7 +188,7 @@ def main():
 
         if advice_notice != "N/A":
             advice_notice = md_remove_backticks_and_pipes(advice_notice)
-            footnote_val = f"Usage notice: `{advice_notice}`"
+            footnote_val = f"Module advice notice: `{advice_notice}`"
             if footnote_val not in footnote_map:
                 footnote_map[footnote_val] = footnote_counter
                 footnote_counter += 1

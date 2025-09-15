@@ -587,37 +587,37 @@ All manual changes will be overwritten!
 | [`99999`](/src/modules/module_99999.c) | `Plaintext` | <sup>  [a0p](/OpenCL/m00900_a0-pure.cl),&nbsp;[a0o](/OpenCL/m00900_a0-optimized.cl),&nbsp;[a1p](/OpenCL/m00900_a1-pure.cl),&nbsp;[a1o](/OpenCL/m00900_a1-optimized.cl),&nbsp;[a3p](/OpenCL/m00900_a3-pure.cl),&nbsp;[a3o](/OpenCL/m00900_a3-optimized.cl) </sup> | :x: | `hashcat` |
 
 [^1]: Example password: `HASHCAT`
-[^2]: Usage notice: `rounds=[# of iterations] is optional here, after signature, e.g. $5$rounds=5000`
-[^3]: Usage notice: `When using the optimized-kernel: some byte encoding is simplified that would make some non-ASCII passwords never be cracked, even if they are under the optimized byte limit. The pure-kernel implements true UTF16 handling so doesn't have this problem and should crack all passwords.`
+[^2]: Module usage notice: `rounds=[# of iterations] is optional here, after signature, e.g. $5$rounds=5000`
+[^3]: Module advice notice: `When using the optimized-kernel: some byte encoding is simplified that would make some non-ASCII passwords never be cracked, even if they are under the optimized byte limit. The pure-kernel implements true UTF16 handling so doesn't have this problem and should crack all passwords.`
 [^4]: Example password: `hashcat!`
 [^5]: Example password: `7f620a599c445155935a35634638fa67b4aafecb92e0bd8625388757a63c2dda`
-[^6]: Usage notice: `The hashformat is hash:salt:id`
-[^7]: Usage notice: `The hash used here is not the one sent via e.g. the web interface to LastPass servers (pbkdf2_sha256_hex (pbkdf2_sha256 ($pass, $email, $iterations), $pass, 1) but instead the one stored (by e.g. your browser or the pocket version) to disk. For instance, Opera and Chrome store the hash in local SQLite databases; Firefox uses files ending with 'lpall.slps' - for Linux: 2nd line is interesting / base64 decode it; for Windows, see https://hashcat.net/forum/thread-2701-post-16111.html#pid16111 - and_key.itr`
+[^6]: Module usage notice: `The hashformat is hash:salt:id`
+[^7]: Module usage notice: `The hash used here is not the one sent via e.g. the web interface to LastPass servers (pbkdf2_sha256_hex (pbkdf2_sha256 ($pass, $email, $iterations), $pass, 1) but instead the one stored (by e.g. your browser or the pocket version) to disk. For instance, Opera and Chrome store the hash in local SQLite databases; Firefox uses files ending with 'lpall.slps' - for Linux: 2nd line is interesting / base64 decode it; for Windows, see https://hashcat.net/forum/thread-2701-post-16111.html#pid16111 - and_key.itr`
 [^8]: Example password: `admin`
-[^9]: Usage notice: `use this SQL query to extract the hashes:
+[^9]: Module usage notice: `use this SQL query to extract the hashes:
 SELECT user, CONCAT('$mysql', SUBSTR(authentication_string,1,3), LPAD(CONV(SUBSTR(authentication_string,4,3),16,10),4,0),'*',INSERT(HEX(SUBSTR(authentication_string,8)),41,0,'*')) AS hash FROM user WHERE plugin = 'caching_sha2_password' AND authentication_string NOT LIKE '%INVALIDSALTANDPASSWORD%';`
 [^10]: Example password: `SYS1`
 [^11]: Example password: `$HEX[91b2e062b9]`
 [^12]: Example password: `$HEX[b8f63619ca]`
 [^13]: Example password: `$HEX[6a8aedccb7]`
-[^14]: Usage notice: `You can consider the second part as a 'salt'. If it is equal to 00000000, the CRC32 code will be considered as 'not salted'`
-[^15]: Usage notice: `You can use https://github.com/philsmd/7z2hashcat to extract the hashes`
-[^16]: Usage notice: `You can use https://github.com/Fist0urs/AxSuite to extract the hashes`
-[^17]: Usage notice: `PIM for example hash is 500`
+[^14]: Module usage notice: `You can consider the second part as a 'salt'. If it is equal to 00000000, the CRC32 code will be considered as 'not salted'`
+[^15]: Module usage notice: `You can use https://github.com/philsmd/7z2hashcat to extract the hashes`
+[^16]: Module usage notice: `You can use https://github.com/Fist0urs/AxSuite to extract the hashes`
+[^17]: Module usage notice: `PIM for example hash is 500`
 [^18]: Example password: `hashcat1`
 [^19]: Example password: `hashcat1hashcat1hashcat1`
 [^20]: Example password: `N/A`
-[^21]: Usage notice: `The file https://hashcat.net/misc/example_hashes/hashcat_luks_testfiles.7z actually contains several examples of the different hash+cipher combinations. The password is stored in the pw file. That file is automatically used by tools/test.sh`
-[^22]: Usage notice: `You can use https://github.com/philsmd/itunes_backup2hashcat/ to extract the hashes from the Manifest.plist file`
+[^21]: Module usage notice: `The file https://hashcat.net/misc/example_hashes/hashcat_luks_testfiles.7z actually contains several examples of the different hash+cipher combinations. The password is stored in the pw file. That file is automatically used by tools/test.sh`
+[^22]: Module usage notice: `You can use https://github.com/philsmd/itunes_backup2hashcat/ to extract the hashes from the Manifest.plist file`
 [^23]: Example password: `hashcat!!!`
 [^24]: Example password: `hashcat_hashcat_hashcat_hashcat_`
 [^25]: Example password: `5b13d4babb3714ccc62c9f71864bc984efd6a55f237c7a87fc2151e1ca658a9d`
 [^26]: Example password: `8CdhZ2J8umrHg0tMjB0NDRDpKKFeL7i`
 [^27]: Example password: `Hashcat1!`
 [^28]: Example password: `t`
-[^29]: Usage notice: `The full example password in output is 'hashcat', but input provided must be without the first 6 bytes (therefore it is just 't')`
+[^29]: Module usage notice: `The full example password in output is 'hashcat', but input provided must be without the first 6 bytes (therefore it is just 't')`
 [^30]: Example password: `88f43854ae7b1624fc2ab7724859e795130f4843c7535729e819cf92f39535dc`
-[^31]: Usage notice: `You can use https://github.com/0x6470/bitwarden2hashcat to extract the hashes`
+[^31]: Module usage notice: `You can use https://github.com/0x6470/bitwarden2hashcat to extract the hashes`
 [^32]: Example password: `b4b9b02e6f09a9bd760f388b67351e2b`
 [^33]: Example password: `KxhashcatxhXkULNJYF8Fu46G28SJrC7x2qwFtRuf38kVjkWxHg3`
 [^34]: Example password: `5KcL859EUnBDtVG76134U6DZWnVmpE996emJnWmTLRW2hashcat`
@@ -635,5 +635,5 @@ SELECT user, CONCAT('$mysql', SUBSTR(authentication_string,1,3), LPAD(CONV(SUBST
 [^46]: Example password: `hashc`
 [^47]: Example password: `hashcat12`
 [^48]: Example password: `hashcat123456`
-[^49]: Usage notice: `To extract hash from KDBX use https://github.com/openwall/john/blob/bleeding-jumbo/src/keepass2john.c`
+[^49]: Module usage notice: `To extract hash from KDBX use https://github.com/openwall/john/blob/bleeding-jumbo/src/keepass2john.c`
 [^50]: Example password: `IOIO13`
