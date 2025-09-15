@@ -1015,9 +1015,10 @@ static int outer_loop (hashcat_ctx_t *hashcat_ctx)
     if (module_ctx->module_advice_notice != MODULE_DEFAULT)
     {
       char *t_module_advice_notice = (char *) module_ctx->module_advice_notice (hashconfig, hashcat_ctx->user_options, user_options_extra);
-      event_log_advice(hashcat_ctx, "Module advice notice: %s", t_module_advice_notice);
+      const u64 module_kern_type = module_ctx->module_kern_type (hashconfig, hashcat_ctx->user_options, user_options_extra);
+      event_log_advice(hashcat_ctx, "Module %" PRIu64 " advice notice: %s", module_kern_type, t_module_advice_notice);
+      event_log_advice (hashcat_ctx, NULL);
     }
-
   }
 
   // main call
