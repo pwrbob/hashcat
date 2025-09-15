@@ -7,8 +7,10 @@ Using the **Hashcat toolchain** docker, two versions of hashcat will be created,
 
 ### Building ###
 
+By default, this Docker sets MAINTAINER_MODE to 1. In the following example, we force this setting to 0 using an additional argument.
+
 ```bash
-docker build --build-arg UBUNTU_VERSION=16.04 --build-arg MAINTAINER_MODE=1 -f docker/hashcatToolchain.ubuntu -t hashcat-toolchain:16.04 .
+docker build --build-arg UBUNTU_VERSION=16.04 --build-arg MAINTAINER_MODE=0 -f docker/hashcatToolchain.ubuntu -t hashcat-toolchain:16.04 .
 ```
 
 This will create a Docker image based on Ubuntu 16.04 with a custom toolchain (note that the Ubuntu versions tested are from 16.04 to 22.04).
