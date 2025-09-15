@@ -10,7 +10,7 @@
 
 Download the [latest release](https://hashcat.net/hashcat/) and unpack it in the desired location. Please remember to use `7z x` when unpacking the archive from the command line to ensure full file paths remain intact.
 
-Your platform may also provide [packages](packages.md).
+Your platform may also provide [packages](docs/packages.md).
 
 ### Usage/Help ###
 
