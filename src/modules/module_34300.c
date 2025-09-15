@@ -48,7 +48,7 @@ const char *module_st_pass        (MAYBE_UNUSED const hashconfig_t *hashconfig, 
 
 const char *module_usage_notice (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra)
 {
-  return "To extract hash from KDBX use https://github.com/openwall/john/blob/bleeding-jumbo/src/keepass2john.c";
+  return "You can use https://github.com/openwall/john/blob/bleeding-jumbo/src/keepass2john.c to extract the hashes";
 }
 
 typedef struct keepass4
