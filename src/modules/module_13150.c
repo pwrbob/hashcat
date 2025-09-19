@@ -1,6 +1,6 @@
 /**
- * Kerberos 5, etype 23, TGS-REP (NT)
- * Same as -m 13100 but the candidate is a raw NT hash (32 hex -> 16 bytes).
+ * Author......: See docs/credits.txt
+ * License.....: MIT
  */
 
 #include "common.h"
@@ -10,7 +10,7 @@
 #include "convert.h"
 #include "shared.h"
 
-static const u32   ATTACK_EXEC    = ATTACK_EXEC_INSIDE_KERNEL;
+static const u32   ATTACK_EXEC    = ATTACK_EXEC_OUTSIDE_KERNEL;
 static const u32   DGST_POS0      = 0;
 static const u32   DGST_POS1      = 1;
 static const u32   DGST_POS2      = 2;
@@ -23,9 +23,9 @@ static const u32   OPTI_TYPE      = OPTI_TYPE_ZERO_BYTE
                                   | OPTI_TYPE_NOT_ITERATED;
 static const u64   OPTS_TYPE      = OPTS_TYPE_STOCK_MODULE
                                   | OPTS_TYPE_PT_GENERATE_LE
-                                  | OPTS_TYPE_ST_HEX; // <— 32-hex input
+                                  | OPTS_TYPE_ST_HEX;
 static const u32   SALT_TYPE      = SALT_TYPE_EMBEDDED;
-static const char *ST_PASS        = "b4b9b02e6f09a9bd760f388b67351e2b"; // example NT
+static const char *ST_PASS        = "b4b9b02e6f09a9bd760f388b67351e2b";
 static const char *ST_HASH        = "$krb5tgs$23$*user$realm$test/spn*$b548e10f5694ae018d7ad63c257af7dc$35e8e45658860bc31a859b41a08989265f4ef8afd75652ab4d7a30ef151bf6350d879ae189a8cb769e01fa573c6315232b37e4bcad9105520640a781e5fd85c09615e78267e494f433f067cc6958200a82f70627ce0eebc2ac445729c2a8a0255dc3ede2c4973d2d93ac8c1a56b26444df300cb93045d05ff2326affaa3ae97f5cd866c14b78a459f0933a550e0b6507bf8af27c2391ef69fbdd649dd059a4b9ae2440edd96c82479645ccdb06bae0eead3b7f639178a90cf24d9a";
 
 typedef struct krb5tgs
@@ -37,52 +37,82 @@ typedef struct krb5tgs
   u32 format;
 } krb5tgs_t;
 
+typedef struct tgs_tmp
+{
+  u32 nt[4];
+} tgs_tmp_t;
+
 static const char *SIGNATURE_KRB5TGS = "$krb5tgs$";
 
-/* wrappers */
-u32 module_attack_exec   (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *u, MAYBE_UNUSED const user_options_extra_t *e) { return ATTACK_EXEC; }
-u32 module_dgst_pos0     (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *u, MAYBE_UNUSED const user_options_extra_t *e) { return DGST_POS0; }
-u32 module_dgst_pos1     (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *u, MAYBE_UNUSED const user_options_extra_t *e) { return DGST_POS1; }
-u32 module_dgst_pos2     (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *u, MAYBE_UNUSED const user_options_extra_t *e) { return DGST_POS2; }
-u32 module_dgst_pos3     (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *u, MAYBE_UNUSED const user_options_extra_t *e) { return DGST_POS3; }
-u32 module_dgst_size     (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *u, MAYBE_UNUSED const user_options_extra_t *e) { return DGST_SIZE; }
-u32 module_hash_category (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *u, MAYBE_UNUSED const user_options_extra_t *e) { return HASH_CATEGORY; }
-const char *module_hash_name (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *u, MAYBE_UNUSED const user_options_extra_t *e) { return HASH_NAME; }
-u64 module_kern_type     (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *u, MAYBE_UNUSED const user_options_extra_t *e) { return KERN_TYPE; }
-u32 module_opti_type     (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *u, MAYBE_UNUSED const user_options_extra_t *e) { return OPTI_TYPE; }
-u64 module_opts_type     (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *u, MAYBE_UNUSED const user_options_extra_t *e) { return OPTS_TYPE; }
-u32 module_salt_type     (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *u, MAYBE_UNUSED const user_options_extra_t *e) { return SALT_TYPE; }
-const char *module_st_hash (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *u, MAYBE_UNUSED const user_options_extra_t *e) { return ST_HASH; }
-const char *module_st_pass (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *u, MAYBE_UNUSED const user_options_extra_t *e) { return ST_PASS; }
+u32         module_attack_exec    (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *u, MAYBE_UNUSED const user_options_extra_t *e) { return ATTACK_EXEC; }
+u32         module_dgst_pos0      (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *u, MAYBE_UNUSED const user_options_extra_t *e) { return DGST_POS0; }
+u32         module_dgst_pos1      (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *u, MAYBE_UNUSED const user_options_extra_t *e) { return DGST_POS1; }
+u32         module_dgst_pos2      (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *u, MAYBE_UNUSED const user_options_extra_t *e) { return DGST_POS2; }
+u32         module_dgst_pos3      (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *u, MAYBE_UNUSED const user_options_extra_t *e) { return DGST_POS3; }
+u32         module_dgst_size      (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *u, MAYBE_UNUSED const user_options_extra_t *e) { return DGST_SIZE; }
+u32         module_hash_category  (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *u, MAYBE_UNUSED const user_options_extra_t *e) { return HASH_CATEGORY; }
+const char *module_hash_name      (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *u, MAYBE_UNUSED const user_options_extra_t *e) { return HASH_NAME; }
+u64         module_kern_type      (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *u, MAYBE_UNUSED const user_options_extra_t *e) { return KERN_TYPE; }
+u32         module_opti_type      (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *u, MAYBE_UNUSED const user_options_extra_t *e) { return OPTI_TYPE; }
+u64         module_opts_type      (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *u, MAYBE_UNUSED const user_options_extra_t *e) { return OPTS_TYPE; }
+u32         module_salt_type      (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *u, MAYBE_UNUSED const user_options_extra_t *e) { return SALT_TYPE; }
+const char *module_st_hash        (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *u, MAYBE_UNUSED const user_options_extra_t *e) { return ST_HASH; }
+const char *module_st_pass        (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *u, MAYBE_UNUSED const user_options_extra_t *e) { return ST_PASS; }
+
+u64 module_tmp_size (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra)
+{
+  const u64 tmp_size = (const u64) sizeof (tgs_tmp_t); // <— required for outside-kernel
+
+  return tmp_size;
+}
+
+u32 module_pw_min (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *u, MAYBE_UNUSED const user_options_extra_t *e) { return 32; }
+u32 module_pw_max (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *u, MAYBE_UNUSED const user_options_extra_t *e) { return 32; }
+
+bool module_unstable_warning (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra, MAYBE_UNUSED const hc_device_param_t *device_param)
+{
+  if ((device_param->opencl_platform_vendor_id == VENDOR_ID_APPLE) && (device_param->opencl_device_type & CL_DEVICE_TYPE_GPU))
+  {
+    if (device_param->is_metal == true)
+    {
+      if (strncmp (device_param->device_name, "Intel", 5) == 0)
+      {
+        // Intel Iris Graphics, Metal Version 244.303: self-test failed
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+char *module_jit_build_options (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra, MAYBE_UNUSED const hashes_t *hashes, MAYBE_UNUSED const hc_device_param_t *device_param)
+{
+  char *jit_build_options = NULL;
+
+  // We must override whatever tuningdb entry or -T value was set by the user with this
+  // That's because of RC code in inc_cipher_rc4.cl has this for GPU (different on CPU):
+  // #define KEY32(t,k) (((k) * 32) + ((t) & 31) + (((t) / 32) * 2048))
+  // #define KEY8(t,k) (((k) & 3) + (((k) / 4) * 128) + (((t) & 31) * 4) + (((t) / 32) * 8192))
+
+  u32 native_threads = (device_param->opencl_device_type & CL_DEVICE_TYPE_CPU) ? 1 : 32;
+
+  hc_asprintf (&jit_build_options, "-D FIXED_LOCAL_SIZE=%u", native_threads);
+
+  return jit_build_options;
+}
 
 u64 module_esalt_size (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *u, MAYBE_UNUSED const user_options_extra_t *e)
 {
   return (u64) sizeof (krb5tgs_t);
 }
 
-u32 module_pw_min (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *u, MAYBE_UNUSED const user_options_extra_t *e) { return 32; }
-u32 module_pw_max (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *u, MAYBE_UNUSED const user_options_extra_t *e) { return 32; }
-
-char *module_jit_build_options (MAYBE_UNUSED const hashconfig_t *hashconfig,
-                                MAYBE_UNUSED const user_options_t *user_options,
-                                MAYBE_UNUSED const user_options_extra_t *user_options_extra,
-                                MAYBE_UNUSED const hashes_t *hashes,
-                                MAYBE_UNUSED const hc_device_param_t *device_param)
-{
-  char *jit_build_options = NULL;
-  u32 native_threads = (device_param->opencl_device_type & CL_DEVICE_TYPE_CPU) ? 1 : 32;
-  hc_asprintf (&jit_build_options, "-D FIXED_LOCAL_SIZE=%u", native_threads);
-  return jit_build_options;
-}
-
-/* hash decode/encode — identical to 13100 */
 int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, void *digest_buf, salt_t *salt, void *esalt_buf, MAYBE_UNUSED void *hook_salt_buf, MAYBE_UNUSED hashinfo_t *hash_info, const char *line_buf, const int line_len)
 {
   u32 *digest = (u32 *) digest_buf;
   krb5tgs_t *krb5tgs = (krb5tgs_t *) esalt_buf;
 
-  hc_token_t token;
-  memset (&token, 0, sizeof (hc_token_t));
+  hc_token_t token; memset (&token, 0, sizeof (hc_token_t));
 
   token.signatures_cnt    = 1;
   token.signatures_buf[0] = SIGNATURE_KRB5TGS;
@@ -99,13 +129,12 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, void *diges
   {
     if (line_buf[token.len[0] + 3] == '*')
     {
-      const char *account_info_start = line_buf + 12;
-      char *account_info_stop  = strchr (account_info_start + 1, '*');
+      const char *account_info_start = line_buf + 12; // include leading '*'
+      char *account_info_stop = strchr (account_info_start + 1, '*');
       if (account_info_stop == NULL) return (PARSER_SEPARATOR_UNMATCHED);
       account_info_stop++; // include '*'
       account_info_stop++; // include '$'
-
-      const int account_info_len = (int)(account_info_stop - account_info_start);
+      const int account_info_len = (int) (account_info_stop - account_info_start);
 
       token.token_cnt++;
       token.sep[1]  = '$'; token.len[1]  = 2;  token.attr[1] = TOKEN_ATTR_FIXED_LENGTH | TOKEN_ATTR_VERIFY_DIGIT;
@@ -138,27 +167,21 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, void *diges
 
   const u8 *checksum_pos = NULL;
   const u8 *data_pos     = NULL;
-  int data_len           = 0;
+  int        data_len    = 0;
 
   if (krb5tgs->format == 1)
   {
-    checksum_pos = token.buf[3];
-    data_pos     = token.buf[4];
-    data_len     = token.len[4];
+    checksum_pos = token.buf[3]; data_pos = token.buf[4]; data_len = token.len[4];
     memcpy (krb5tgs->account_info, token.buf[2], token.len[2]);
   }
   else if (krb5tgs->format == 2)
   {
-    checksum_pos = token.buf[2];
-    data_pos     = token.buf[3];
-    data_len     = token.len[3];
+    checksum_pos = token.buf[2]; data_pos = token.buf[3]; data_len = token.len[3];
     krb5tgs->account_info[0] = 0;
   }
   else
   {
-    checksum_pos = token.buf[2];
-    data_pos     = token.buf[3];
-    data_len     = token.len[3];
+    checksum_pos = token.buf[2]; data_pos = token.buf[3]; data_len = token.len[3];
     memcpy (krb5tgs->account_info, token.buf[1], token.len[1]);
   }
 
@@ -175,11 +198,13 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, void *diges
   {
     const u8 p0 = data_pos[i + 0];
     const u8 p1 = data_pos[i + 1];
-    *edata_ptr++ = ((hex_convert (p1) << 0) | (hex_convert (p0) << 4));
+    *edata_ptr++ = (hex_convert (p1) << 0) | (hex_convert (p0) << 4);
   }
 
-  krb5tgs->edata2_len = data_len / 2;
-  *edata_ptr++ = 0x80; // for HMAC-MD5
+  krb5tgs->edata2_len = (u32) (data_len / 2);
+
+  /* needed for hmac_md5 */
+  *edata_ptr++ = 0x80;
 
   salt->salt_buf[0] = krb5tgs->checksum[0];
   salt->salt_buf[1] = krb5tgs->checksum[1];
@@ -187,6 +212,7 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, void *diges
   salt->salt_buf[3] = krb5tgs->checksum[3];
   salt->salt_len    = 16;
 
+  /* set digest to checksum; device compares recomputed HMAC to this */
   digest[0] = krb5tgs->checksum[0];
   digest[1] = krb5tgs->checksum[1];
   digest[2] = krb5tgs->checksum[2];
@@ -206,7 +232,7 @@ int module_hash_encode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
     snprintf (data + j, 3, "%02x", ptr[i]);
   }
 
-  int line_len = 0;
+  int line_len;
 
   if (krb5tgs->format != 3)
   {
@@ -234,6 +260,12 @@ int module_hash_encode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
   return line_len;
 }
 
+const char *module_benchmark_mask (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra)
+{
+ const char *mask = "?a?a?a?a?a?a?a?axxxxxxxxxxxxxxxx";
+ return mask;
+}
+
 void module_init (module_ctx_t *module_ctx)
 {
   module_ctx->module_context_size             = MODULE_CONTEXT_SIZE_CURRENT;
@@ -242,7 +274,7 @@ void module_init (module_ctx_t *module_ctx)
   module_ctx->module_attack_exec              = module_attack_exec;
   module_ctx->module_benchmark_esalt          = MODULE_DEFAULT;
   module_ctx->module_benchmark_hook_salt      = MODULE_DEFAULT;
-  module_ctx->module_benchmark_mask           = MODULE_DEFAULT;
+  module_ctx->module_benchmark_mask           = module_benchmark_mask;
   module_ctx->module_benchmark_charset        = MODULE_DEFAULT;
   module_ctx->module_benchmark_salt           = MODULE_DEFAULT;
   module_ctx->module_bridge_name              = MODULE_DEFAULT;
@@ -311,8 +343,7 @@ void module_init (module_ctx_t *module_ctx)
   module_ctx->module_separator                = MODULE_DEFAULT;
   module_ctx->module_st_hash                  = module_st_hash;
   module_ctx->module_st_pass                  = module_st_pass;
-  module_ctx->module_tmp_size                 = MODULE_DEFAULT;
-  module_ctx->module_unstable_warning         = MODULE_DEFAULT;
+  module_ctx->module_tmp_size                 = module_tmp_size;
+  module_ctx->module_unstable_warning         = module_unstable_warning;
   module_ctx->module_warmup_disable           = MODULE_DEFAULT;
 }
-
