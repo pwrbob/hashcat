@@ -517,7 +517,7 @@ static int inner1_loop (hashcat_ctx_t *hashcat_ctx)
 // outer_loop iterates through hash_modes (in benchmark mode)
 // also initializes stuff that depend on hash mode
 
-static int outer_loop (hashcat_ctx_t *hashcat_ctx)
+static int outer_loop (hashcat_ctx_t *hashcat_ctx, const int iteration)
 {
   hashconfig_t         *hashconfig          = hashcat_ctx->hashconfig;
   hashes_t             *hashes              = hashcat_ctx->hashes;
@@ -538,6 +538,8 @@ static int outer_loop (hashcat_ctx_t *hashcat_ctx)
   status_ctx->run_main_level3   = true;
   status_ctx->run_thread_level1 = true;
   status_ctx->run_thread_level2 = true;
+
+  if (iteration) backend_session_context_reset (hashcat_ctx);
 
   /**
    * setup variables and buffers depending on hash_mode
@@ -1010,6 +1012,14 @@ static int outer_loop (hashcat_ctx_t *hashcat_ctx)
       hc_thread_create (inner_threads[inner_threads_cnt], thread_outfile_remove, hashcat_ctx);
 
       inner_threads_cnt++;
+    }
+
+    if (module_ctx->module_advice_notice != MODULE_DEFAULT)
+    {
+      char *t_module_advice_notice = (char *) module_ctx->module_advice_notice (hashconfig, hashcat_ctx->user_options, user_options_extra);
+      const u64 module_kern_type = module_ctx->module_kern_type (hashconfig, hashcat_ctx->user_options, user_options_extra);
+      event_log_advice(hashcat_ctx, "Module %" PRIu64 " advice notice: %s", module_kern_type, t_module_advice_notice);
+      event_log_advice (hashcat_ctx, NULL);
     }
   }
 
@@ -1836,12 +1846,14 @@ int hashcat_session_execute (hashcat_ctx_t *hashcat_ctx)
 
     if (user_options->hash_mode_chgd == true)
     {
-      rc_final = outer_loop (hashcat_ctx);
+      rc_final = outer_loop (hashcat_ctx, 0);
 
       if (rc_final == -1) myabort (hashcat_ctx);
     }
     else
     {
+      int iteration = 0;
+
       int hash_mode = 0;
 
       while ((hash_mode = benchmark_next (hashcat_ctx)) != -1)
@@ -1851,7 +1863,7 @@ int hashcat_session_execute (hashcat_ctx_t *hashcat_ctx)
 
         user_options->hash_mode = hash_mode;
 
-        rc_final = outer_loop (hashcat_ctx);
+        rc_final = outer_loop (hashcat_ctx, iteration++);
 
         if (rc_final == -1) myabort (hashcat_ctx);
 
@@ -1867,7 +1879,7 @@ int hashcat_session_execute (hashcat_ctx_t *hashcat_ctx)
 
     if (user_options->speed_only == true) user_options->quiet = true;
 
-    rc_final = outer_loop (hashcat_ctx);
+    rc_final = outer_loop (hashcat_ctx, 0);
 
     if (rc_final == -1) myabort (hashcat_ctx);
 
