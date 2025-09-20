@@ -378,13 +378,15 @@ RUN if [ "${USE_GCC}" = "1" ]; then \
            binaries -s -j 2>&1 | stdbuf -oL -eL  tee -a /root/binaries.gcc.log && \
       tools/package_bin.sh && \
       cd /root/xy && \
-      for f in hashcat-*; do \
-        if [ -d "$f" ]; then \
-          mv "$f" /root/out/"${f}-gcc"; \
-        elif [ "${f##*.}" = "7z" ]; then \
-          mv "$f" /root/out/"${f%.7z}-gcc.7z"; \
-        fi; \
-      done; \
+      if [ "${USE_CLANG}" = "1" ]; then \
+        for f in hashcat-*; do \
+          if [ -d "$f" ]; then \
+            mv "$f" /root/out/"${f}-gcc"; \
+          elif [ "${f##*.}" = "7z" ]; then \
+            mv "$f" /root/out/"${f%.7z}-gcc.7z"; \
+          fi; \
+        done; \
+      fi; \
     fi
 
 RUN if [ "${USE_CLANG}" = "1" ]; then \
@@ -397,18 +399,20 @@ RUN if [ "${USE_CLANG}" = "1" ]; then \
            binaries -s -j 2>&1 | stdbuf -oL -eL tee -a /root/binaries.clang.log && \
       tools/package_bin.sh && \
       cd /root/xy && \
-      for f in hashcat-*; do \
-        if [ -d "$f" ]; then \
-          mv "$f" /root/out/"${f}-clang"; \
-        elif [ "${f##*.}" = "7z" ]; then \
-          mv "$f" /root/out/"${f%.7z}-clang.7z"; \
-        fi; \
-      done; \
+      if [ "${USE_GCC}" = "1" ]; then \
+        for f in hashcat-*; do \
+          if [ -d "$f" ]; then \
+            mv "$f" /root/out/"${f}-clang"; \
+          elif [ "${f##*.}" = "7z" ]; then \
+            mv "$f" /root/out/"${f%.7z}-clang.7z"; \
+          fi; \
+        done; \
+      fi; \
     fi
 
 WORKDIR /root
 
-RUN mv /root/out/* /root/xy/ && rm -rf /root/out /root/hashcat-* $WD/src $WD/build /tmp/* /var/tmp/*
+RUN if [ "${USE_CLANG}" = "1" ] && [ "${USE_GCC}" = "1" ]; then mv /root/out/* /root/xy/ ; fi; rm -rf /root/out /root/hashcat-* $WD/src $WD/build /tmp/* /var/tmp/*
 
 ARG WITH_CODE_ANALYSIS=0
 ENV WITH_CODE_ANALYSIS=${WITH_CODE_ANALYSIS}
@@ -428,12 +432,14 @@ RUN echo "Toolchain config: " | tee -a /root/toolchain-info.log && \
     echo "MAX_CORES: ${MAX_CORES}" | tee -a /root/toolchain-info.log && \
     echo "ENABLE_LTO: ${ENABLE_LTO}" | tee -a /root/toolchain-info.log && \
     echo "MAINTAINER_MODE: ${MAINTAINER_MODE}" | tee -a /root/toolchain-info.log && \
+    echo "USE_CLANG: ${USE_CLANG}" | tee -a /root/toolchain-info.log && \
+    echo "USE_GCC: ${USE_GCC}" | tee -a /root/toolchain-info.log && \
     echo "WITH_CODE_ANALYSIS: ${WITH_CODE_ANALYSIS}" | tee -a /root/toolchain-info.log && \
     echo "WD: ${WD}" | tee -a /root/toolchain-info.log && \
     echo -n "GLIBC_VERSION: " | tee -a /root/toolchain-info.log && \
     strings /root/xy/hashcat-*/hashcat.bin | grep -o 'GLIBC_[0-9]\+\.[0-9]\+' | sort -V | tail -1 | tee -a /root/toolchain-info.log && \
     ldd /root/xy/hashcat-*/hashcat.bin | tee -a /root/linux_libs_dump.log && \
-    x86_64-w64-mingw32-objdump -p /root/xy/hashcat-7.1.2-*/hashcat.exe | grep 'DLL Name' | tee -a /root/win_libs_dump.log
+    x86_64-w64-mingw32-objdump -p /root/xy/hashcat-*/hashcat.exe | grep 'DLL Name' | tee -a /root/win_libs_dump.log
 
 # TODO: move to code-analysis.sh
 

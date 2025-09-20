@@ -26,7 +26,8 @@ Optionally you can place additional *.patch or *.diff files into `patches/` fold
 
 ### Output ###
 
-The resulting output package will be located in: `/root/xy/hashcat-<version>-<compiler>.7z`.
+Using the default settings, the resulting output package will be located in: `/root/xy/hashcat-<version>.7z`,
+or `hashcat-<version>-<compiler>.7z` if both `USE_GCC` and `USE_CLANG` are set to 1.
 
 You can copy it to your host with this command:
 
