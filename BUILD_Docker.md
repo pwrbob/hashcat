@@ -3,7 +3,7 @@
 To build both Linux and Windows binaries in a clean and reproducible environment a dockerfile is available.
 It is not considered to be used as a runtime OS.
 
-Using the **Hashcat toolchain** docker, two versions of hashcat will be created, one compiled with gcc/mingw and the other with clang.
+Using the **Hashcat toolchain** docker with the default settings will create a single version of hashcat, compiled with clang.
 
 ### Building ###
 
@@ -15,6 +15,9 @@ docker build --build-arg UBUNTU_VERSION=16.04 --build-arg MAINTAINER_MODE=0 -f d
 
 This will create a Docker image based on Ubuntu 16.04 with a custom toolchain (note that the Ubuntu versions tested are from 16.04 to 22.04).
 After the first execution, by adding `--build-arg CACHE_BUST=$(date +%s)`, only the hashcat sources will be forced to re-download and rebuild.
+
+If you want to compile hashcat with gcc/mingw only, you can override the default settings using `--build-arg USE_GCC=1 --build-arg USE_CLANG=0`.
+Likewise, you can get two versions of hashcat (compiled with both gcc/mingw and clang) by using `--build-arg USE_GCC=1`.
 
 Moreover, by adding `--build-arg WITH_CODE_ANALYSIS=1` clang-tools (specifically clang-tidy and scan-build) will be used to perform a static code analysis on the hashcat sources.
 The results will be saved in: `/root/code-analysis`.

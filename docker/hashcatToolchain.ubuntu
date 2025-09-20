@@ -353,9 +353,13 @@ ENV PATH=$WD/install/clang/bin:$PATH \
 ARG CACHE_BUST=1
 ARG ENABLE_LTO=1
 ARG MAINTAINER_MODE=1
+ARG USE_CLANG=1
+ARG USE_GCC=0
 
 ENV ENABLE_LTO=${ENABLE_LTO} \
-    MAINTAINER_MODE=${MAINTAINER_MODE}
+    MAINTAINER_MODE=${MAINTAINER_MODE} \
+    USE_CLANG=${USE_CLANG} \
+    USE_GCC=${USE_GCC}
 
 WORKDIR /root
 
@@ -367,44 +371,40 @@ WORKDIR /root/hashcat
 
 RUN bash -c 'shopt -s nullglob; for p in /root/patches/*.patch /root/patches/*.diff; do git apply "$p"; done'
 
-WORKDIR /root
+RUN if [ "${USE_GCC}" = "1" ]; then \
+      cp -af /root/hashcat /root/hashcat-gcc && cd /root/hashcat-gcc && \
+      make ENABLE_LTO=${ENABLE_LTO} \
+           MAINTAINER_MODE=${MAINTAINER_MODE} \
+           binaries -s -j 2>&1 | stdbuf -oL -eL  tee -a /root/binaries.gcc.log && \
+      tools/package_bin.sh && \
+      cd /root/xy && \
+      for f in hashcat-*; do \
+        if [ -d "$f" ]; then \
+          mv "$f" /root/out/"${f}-gcc"; \
+        elif [ "${f##*.}" = "7z" ]; then \
+          mv "$f" /root/out/"${f%.7z}-gcc.7z"; \
+        fi; \
+      done; \
+    fi
 
-RUN cp -af hashcat hashcat-gcc && cp -af hashcat hashcat-clang
-
-WORKDIR /root/hashcat-gcc
-
-RUN make ENABLE_LTO=${ENABLE_LTO} \
-         MAINTAINER_MODE=${MAINTAINER_MODE} \
-         binaries -s -j 2>&1 | stdbuf -oL -eL  tee -a /root/binaries.gcc.log && \
-    tools/package_bin.sh
-
-RUN cd /root/xy && \
-    for f in hashcat-*; do \
-      if [ -d "$f" ]; then \
-        mv "$f" /root/out/"${f}-gcc"; \
-      elif [ "${f##*.}" = "7z" ]; then \
-        mv "$f" /root/out/"${f%.7z}-gcc.7z"; \
-      fi; \
-    done
-
-WORKDIR /root/hashcat-clang
-
-RUN make ENABLE_LTO=${ENABLE_LTO} \
-         MAINTAINER_MODE=${MAINTAINER_MODE} \
-         AR=llvm-ar AR_LINUX=llvm-ar AR_WIN=llvm-ar \
-         CC=clang CC_LINUX=clang CC_WIN=clang \
-         CXX=clang++ CXX_LINUX=clang++ CXX_WIN=clang++ \
-         binaries -s -j 2>&1 | stdbuf -oL -eL tee -a /root/binaries.clang.log && \
-    tools/package_bin.sh
-
-RUN cd /root/xy && \
-    for f in hashcat-*; do \
-      if [ -d "$f" ]; then \
-        mv "$f" /root/out/"${f}-clang"; \
-      elif [ "${f##*.}" = "7z" ]; then \
-        mv "$f" /root/out/"${f%.7z}-clang.7z"; \
-      fi; \
-    done
+RUN if [ "${USE_CLANG}" = "1" ]; then \
+      cp -af /root/hashcat /root/hashcat-clang && cd /root/hashcat-clang && \
+      make ENABLE_LTO=${ENABLE_LTO} \
+           MAINTAINER_MODE=${MAINTAINER_MODE} \
+           AR=llvm-ar AR_LINUX=llvm-ar AR_WIN=llvm-ar \
+           CC=clang CC_LINUX=clang CC_WIN=clang \
+           CXX=clang++ CXX_LINUX=clang++ CXX_WIN=clang++ \
+           binaries -s -j 2>&1 | stdbuf -oL -eL tee -a /root/binaries.clang.log && \
+      tools/package_bin.sh && \
+      cd /root/xy && \
+      for f in hashcat-*; do \
+        if [ -d "$f" ]; then \
+          mv "$f" /root/out/"${f}-clang"; \
+        elif [ "${f##*.}" = "7z" ]; then \
+          mv "$f" /root/out/"${f%.7z}-clang.7z"; \
+        fi; \
+      done; \
+    fi
 
 WORKDIR /root
 
