@@ -4,9 +4,6 @@
 ## Author......: See docs/credits.txt
 ## License.....: MIT
 ##
-## Mode 18250 — Kerberos 5, etype 23, AS-REP (NT candidates)
-## Candidates are 32 ASCII hex chars (NT hash).
-##
 
 use strict;
 use warnings;
@@ -20,14 +17,15 @@ sub module_constraints { [[32, 32], [16, 16], [0, 27], [16, 16], [-1, -1]] }
 sub module_generate_hash
 {
   my $word                = shift;                              # NT in hex (32 chars)
-  my $salt                = shift;                              # unused here (kept for framework signature)
+  my $salt                = shift;
   my $user_principal_name = shift // "user\@domain.com";
-  my $checksum            = shift;                              # optional (hex)
-  my $edata2              = shift;                              # optional (hex)
+  my $checksum            = shift;
+  my $edata2              = shift;
 
   # NT key is supplied directly as hex32 (16 bytes), no MD4(UTF16LE) here
   my $k  = pack("H*", $word);
-  my $k1 = hmac_md5("\x08\x00\x00\x00", $k);                    # usage 8 (little-endian)
+
+  my $k1 = hmac_md5("\x08\x00\x00\x00", $k);
 
   my $cleartext_ticket =
     '7981df3081dca01b3019a003020117a112041071e026814da2' .
@@ -53,15 +51,23 @@ sub module_generate_hash
 
   if (defined $edata2)
   {
-    my $cipher_decrypt = Crypt::RC4->new($k3);
-    my $ticket_decrypt = unpack("H*", $cipher_decrypt->RC4(pack("H*", $edata2)));
+    my $cipher_decrypt = Crypt::RC4->new ($k3);
 
-    my $ok =
-         ((substr($ticket_decrypt, 16, 4) eq "7981" && substr($ticket_decrypt, 22, 2) eq "30"))
-      || ((substr($ticket_decrypt, 16, 2) eq "79")   && (substr($ticket_decrypt, 20, 2) eq "30"))
-      || ((substr($ticket_decrypt, 16, 4) eq "7982") && (substr($ticket_decrypt, 24, 2) eq "30"));
+    my $ticket_decrypt = unpack ("H*", $cipher_decrypt->RC4 (pack ("H*", $edata2)));
 
-    $cleartext_ticket = $ok ? $ticket_decrypt : ("0" x (length($cleartext_ticket) + 16));
+    my $check_correct  = ((substr ($ticket_decrypt, 16, 4) eq "7981" && substr ($ticket_decrypt, 22, 2) eq "30")) ||
+                         ((substr ($ticket_decrypt, 16, 2) eq "79") && (substr ($ticket_decrypt, 20, 2) eq "30")) ||
+                         ((substr ($ticket_decrypt, 16, 4) eq "7982")  && (substr ($ticket_decrypt, 24, 2) eq "30"));
+
+    if ($check_correct == 1)
+    {
+      $cleartext_ticket = $ticket_decrypt;
+    }
+    else
+    {
+      # fake/wrong ticket (otherwise if we just decrypt/encrypt we end up with false positives all the time)
+      $cleartext_ticket = "0" x (length ($cleartext_ticket) + 16);
+    }
   }
 
   my $cipher = Crypt::RC4->new($k3);
@@ -79,26 +85,31 @@ sub module_verify_hash
 {
   my $line = shift;
 
-  # Expect: "$krb5asrep$23$user:checksum$edata2:<NThex32>"
-  my ($hash, $hash2, $word) = split(':', $line);
-  return unless defined $hash && defined $hash2 && defined $word;
+  my ($hash, $hash2, $word) = split (':', $line);
 
-  my @data = split('\$', $hash);
-  return unless @data == 4;
+  return unless defined $hash;
+  return unless defined $hash2;
+  return unless defined $word;
+
+  my @data = split ('\$', $hash);
+
+  return unless scalar @data == 4;
+
   shift @data;
 
-  my $signature = shift @data;          # "krb5asrep"
-  my $algorithm = shift @data;          # "23"
-  my $user_principal_name = shift @data;
+  my $signature            = shift @data;
+  my $algorithm            = shift @data;
+  my $user_principal_name  = shift @data;
 
   return unless ($signature eq "krb5asrep" && $algorithm eq "23");
 
-  my @data2   = split('\$', $hash2);
-  my $checksum = shift @data2;
-  my $edata2   = shift @data2;
+  my @data2 = split ('\$', $hash2);
 
-  return unless (defined $checksum && length($checksum) == 32);
-  return unless (defined $edata2   && length($edata2)   >= 64);
+  my $checksum             = shift @data2;
+  my $edata2               = shift @data2;
+
+  return unless (length ($checksum) == 32);
+  return unless (length ($edata2) >= 64);
 
   # $word is already hex32 NT; do NOT pack_if_HEX_notation here
   my $new_hash = module_generate_hash($word, undef, $user_principal_name, $checksum, $edata2);
