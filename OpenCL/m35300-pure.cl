@@ -20,57 +20,60 @@
 #define COMPARE_S M2S(INCLUDE_PATH/inc_comp_single.cl)
 #define COMPARE_M M2S(INCLUDE_PATH/inc_comp_multi.cl)
 
-typedef struct krb5asrep
+#ifndef FIXED_LOCAL_SIZE
+#define FIXED_LOCAL_SIZE 32
+#endif/
+
+typedef struct krb5tgs
 {
   u32 account_info[512];
   u32 checksum[4];
   u32 edata2[5120];
   u32 edata2_len;
   u32 format;
-} krb5asrep_t;
+} krb5tgs_t;
 
-typedef struct asrep_tmp
+typedef struct tgs_tmp
 {
   u32 nt[4];
-} asrep_tmp_t;
+} tgs_tmp_t;
 
 #ifdef KERNEL_STATIC
-DECLSPEC u8 hex_convert_18250 (const u8 c)
+DECLSPEC u8 hex_convert_35300 (const u8 c)
 {
   return (c & 15) + (c >> 6) * 9;
 }
 
-DECLSPEC u8 hex_to_u8_18250 (PRIVATE_AS const u8 *hex)
+DECLSPEC u8 hex_to_u8_35300 (PRIVATE_AS const u8 *hex)
 {
   u8 v = 0;
-  v |= ((u8) hex_convert_18250 (hex[1]) << 0);
-  v |= ((u8) hex_convert_18250 (hex[0]) << 4);
+  v |= ((u8) hex_convert_35300 (hex[1]) << 0);
+  v |= ((u8) hex_convert_35300 (hex[0]) << 4);
   return v;
 }
 #endif
 
-KERNEL_FQ KERNEL_FA void m18250_init (KERN_ATTR_TMPS_ESALT (asrep_tmp_t, krb5asrep_t))
+KERNEL_FQ KERNEL_FA void m35300_init (KERN_ATTR_TMPS_ESALT (tgs_tmp_t, krb5tgs_t))
 {
   const u64 gid = get_global_id (0);
   if (gid >= GID_CNT) return;
 
   u32 in[8];
-  in[ 0] = pws[gid].i[ 0];
-  in[ 1] = pws[gid].i[ 1];
-  in[ 2] = pws[gid].i[ 2];
-  in[ 3] = pws[gid].i[ 3];
-  in[ 4] = pws[gid].i[ 4];
-  in[ 5] = pws[gid].i[ 5];
-  in[ 6] = pws[gid].i[ 6];
-  in[ 7] = pws[gid].i[ 7];
+  in[0] = pws[gid].i[0];
+  in[1] = pws[gid].i[1];
+  in[2] = pws[gid].i[2];
+  in[3] = pws[gid].i[3];
+  in[4] = pws[gid].i[4];
+  in[5] = pws[gid].i[5];
+  in[6] = pws[gid].i[6];
+  in[7] = pws[gid].i[7];
 
   u8 nt16[16];
-
   PRIVATE_AS u8 *in_ptr = (PRIVATE_AS u8 *) in;
 
   for (int i = 0, j = 0; i < 16; i++, j += 2)
   {
-    nt16[i] = hex_to_u8_18250 (in_ptr + j);
+    nt16[i] = hex_to_u8_35300 (in_ptr + j);
   }
 
   tmps[gid].nt[0] = (u32) nt16[ 0]       | ((u32) nt16[ 1] <<  8) | ((u32) nt16[ 2] << 16) | ((u32) nt16[ 3] << 24);
@@ -79,12 +82,12 @@ KERNEL_FQ KERNEL_FA void m18250_init (KERN_ATTR_TMPS_ESALT (asrep_tmp_t, krb5asr
   tmps[gid].nt[3] = (u32) nt16[12]       | ((u32) nt16[13] <<  8) | ((u32) nt16[14] << 16) | ((u32) nt16[15] << 24);
 }
 
-KERNEL_FQ KERNEL_FA void m18250_loop (KERN_ATTR_TMPS_ESALT (asrep_tmp_t, krb5asrep_t))
+KERNEL_FQ KERNEL_FA void m35300_loop (KERN_ATTR_TMPS_ESALT (tgs_tmp_t, krb5tgs_t))
 {
 
 }
 
-KERNEL_FQ KERNEL_FA void m18250_comp (KERN_ATTR_TMPS_ESALT (asrep_tmp_t, krb5asrep_t))
+KERNEL_FQ KERNEL_FA void m35300_comp (KERN_ATTR_TMPS_ESALT (tgs_tmp_t, krb5tgs_t))
 {
   const u64 gid = get_global_id (0);
   const u64 lid = get_local_id  (0);
@@ -114,7 +117,7 @@ KERNEL_FQ KERNEL_FA void m18250_comp (KERN_ATTR_TMPS_ESALT (asrep_tmp_t, krb5asr
 
     md5_hmac_init_64 (&ctx1, k0, k1, k2, k3);
 
-    u32 m0[4] = { 8, 0, 0, 0 };
+    u32 m0[4] = { 2, 0, 0, 0 };
     u32 m1[4] = { 0, 0, 0, 0 };
     u32 m2[4] = { 0, 0, 0, 0 };
     u32 m3[4] = { 0, 0, 0, 0 };
@@ -150,19 +153,24 @@ KERNEL_FQ KERNEL_FA void m18250_comp (KERN_ATTR_TMPS_ESALT (asrep_tmp_t, krb5asr
     K3[3] = ctx3.opad.h[3];
   }
 
-  u32 out0[4];
+  u32 out0[4], out1[4];
 
   {
     PRIVATE_AS u32 key0[4] = { K3[0], K3[1], K3[2], K3[3] };
     rc4_init_128 (S, (PRIVATE_AS u32 *) key0, lid);
-    rc4_next_16_global (S, 0, 0, edata2 + 0, out0, lid);
-  }
 
-  if (((out0[2] & 0x00ff80ff) != 0x00300079) &&
-      ((out0[2] & 0xFF00FFFF) != 0x30008179) &&
-      ((out0[2] & 0x0000FFFF) != 0x00008279 || (out0[3] & 0x000000FF) != 0x00000030))
-  {
-    return;
+    u8 i = 0, j = 0;
+    j = rc4_next_16_global (S, i, j, edata2 + 0, out0, lid); i += 16;
+    j = rc4_next_16_global (S, i, j, edata2 + 4, out1, lid); i += 16;
+
+    if (((out0[2] & 0xff00ffff) != 0x30008163) && ((out0[2] & 0x0000ffff) != 0x00008263))
+    {
+      return;
+    }
+    if (((out1[0] & 0x00ffffff) != 0x00000503) && (out1[0] != 0x050307A0))
+    {
+      return;
+    }
   }
 
   {
