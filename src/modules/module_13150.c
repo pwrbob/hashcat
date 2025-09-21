@@ -107,63 +107,128 @@ u64 module_esalt_size (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED
   return (u64) sizeof (krb5tgs_t);
 }
 
-int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, void *digest_buf, salt_t *salt, void *esalt_buf, MAYBE_UNUSED void *hook_salt_buf, MAYBE_UNUSED hashinfo_t *hash_info, const char *line_buf, const int line_len)
+int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig,
+                        void *digest_buf,
+                        salt_t *salt,
+                        void *esalt_buf,
+                        MAYBE_UNUSED void *hook_salt_buf,
+                        MAYBE_UNUSED hashinfo_t *hash_info,
+                        const char *line_buf,
+                        const int line_len)
 {
   u32 *digest = (u32 *) digest_buf;
   krb5tgs_t *krb5tgs = (krb5tgs_t *) esalt_buf;
 
-  hc_token_t token; memset (&token, 0, sizeof (hc_token_t));
+  hc_token_t token;
+  memset (&token, 0, sizeof (hc_token_t));
 
   token.signatures_cnt    = 1;
   token.signatures_buf[0] = SIGNATURE_KRB5TGS;
   token.len[0]            = 9;
-  token.attr[0]           = TOKEN_ATTR_FIXED_LENGTH | TOKEN_ATTR_VERIFY_SIGNATURE;
+  token.attr[0]           = TOKEN_ATTR_FIXED_LENGTH
+                          | TOKEN_ATTR_VERIFY_SIGNATURE;
 
-  if (line_len < (int) strlen (SIGNATURE_KRB5TGS)) return (PARSER_SALT_LENGTH);
+  /**
+   * hc
+   * format 1: $krb5tgs$23$*user$realm$spn*$checksum$edata2
+   * format 2: $krb5tgs$23$checksum$edata2
+   *
+   * jtr
+   * format 3: $krb5tgs$spn:checksum$edata2
+   */
+
+  if (line_len < (int) strlen (SIGNATURE_KRB5TGS)) return PARSER_SALT_LENGTH;
 
   memset (krb5tgs, 0, sizeof (krb5tgs_t));
 
   token.token_cnt = 4;
 
-  if (line_buf[token.len[0]] == '2' && line_buf[token.len[0] + 1] == '3' && line_buf[token.len[0] + 2] == '$')
+  const size_t sig_len = strlen (SIGNATURE_KRB5TGS);
+
+  // need at least "...$23$"
+  if ((line_len >= (int)(sig_len + 3)) &&
+      (line_buf[sig_len + 0] == '2') &&
+      (line_buf[sig_len + 1] == '3') &&
+      (line_buf[sig_len + 2] == '$'))
   {
-    if (line_buf[token.len[0] + 3] == '*')
+    const size_t after_etype = sig_len + 3;
+
+    if (line_buf[after_etype] == '*')
     {
-      const char *account_info_start = line_buf + 12; // include leading '*'
-      char *account_info_stop = strchr (account_info_start + 1, '*');
-      if (account_info_stop == NULL) return (PARSER_SEPARATOR_UNMATCHED);
-      account_info_stop++; // include '*'
-      account_info_stop++; // include '$'
-      const int account_info_len = (int) (account_info_stop - account_info_start);
+      // format 1: include leading '*' and trailing "*$" in account_info
+      const char *acct_start = line_buf + after_etype;        // at leading '*'
+      char *star2 = strchr (acct_start + 1, '*');
+      if (star2 == NULL) return PARSER_SEPARATOR_UNMATCHED;
+      if (star2[1] != '$') return PARSER_SEPARATOR_UNMATCHED; // must end with "*$"
+
+      const char *acct_stop_incl = star2 + 2;                 // include "*$"
+      const int   acct_len       = (int) (acct_stop_incl - acct_start);
 
       token.token_cnt++;
-      token.sep[1]  = '$'; token.len[1]  = 2;  token.attr[1] = TOKEN_ATTR_FIXED_LENGTH | TOKEN_ATTR_VERIFY_DIGIT;
-      token.len[2]  = account_info_len;        token.attr[2] = TOKEN_ATTR_FIXED_LENGTH;
-      token.sep[3]  = '$'; token.len[3]  = 32; token.attr[3] = TOKEN_ATTR_FIXED_LENGTH | TOKEN_ATTR_VERIFY_HEX;
-      token.sep[4]  = '$'; token.len_min[4] = 64; token.len_max[4] = 40960; token.attr[4] = TOKEN_ATTR_VERIFY_LENGTH | TOKEN_ATTR_VERIFY_HEX;
+
+      // etype
+      token.sep[1]  = '$';
+      token.len[1]  = 2;
+      token.attr[1] = TOKEN_ATTR_FIXED_LENGTH | TOKEN_ATTR_VERIFY_DIGIT;
+
+      // user$realm$spn (with *...*$)
+      token.len[2]  = acct_len;
+      token.attr[2] = TOKEN_ATTR_FIXED_LENGTH;
+
+      // checksum
+      token.sep[3]  = '$';
+      token.len[3]  = 32;
+      token.attr[3] = TOKEN_ATTR_FIXED_LENGTH | TOKEN_ATTR_VERIFY_HEX;
+
+      // edata2
+      token.sep[4]     = '$';
+      token.len_min[4] = 64;
+      token.len_max[4] = 40960;
+      token.attr[4]    = TOKEN_ATTR_VERIFY_LENGTH | TOKEN_ATTR_VERIFY_HEX;
 
       krb5tgs->format = 1;
     }
     else
     {
-      token.sep[1]  = '$'; token.len[1]  = 2;  token.attr[1] = TOKEN_ATTR_FIXED_LENGTH | TOKEN_ATTR_VERIFY_DIGIT;
-      token.sep[2]  = '$'; token.len[2]  = 32; token.attr[2] = TOKEN_ATTR_FIXED_LENGTH | TOKEN_ATTR_VERIFY_HEX;
-      token.sep[3]  = '$'; token.len_min[3] = 64; token.len_max[3] = 40960; token.attr[3] = TOKEN_ATTR_VERIFY_LENGTH | TOKEN_ATTR_VERIFY_HEX;
+      // format 2
+      token.sep[1]  = '$';
+      token.len[1]  = 2;
+      token.attr[1] = TOKEN_ATTR_FIXED_LENGTH | TOKEN_ATTR_VERIFY_DIGIT;
+
+      token.sep[2]  = '$';
+      token.len[2]  = 32;
+      token.attr[2] = TOKEN_ATTR_FIXED_LENGTH | TOKEN_ATTR_VERIFY_HEX;
+
+      token.sep[3]     = '$';
+      token.len_min[3] = 64;
+      token.len_max[3] = 40960;
+      token.attr[3]    = TOKEN_ATTR_VERIFY_LENGTH | TOKEN_ATTR_VERIFY_HEX;
 
       krb5tgs->format = 2;
     }
   }
   else
   {
-    token.sep[1]  = ':'; token.len_min[1] = 0; token.len_max[1] = 2048; token.attr[1] = TOKEN_ATTR_VERIFY_LENGTH;
-    token.sep[2]  = '$'; token.len[2]  = 32;  token.attr[2] = TOKEN_ATTR_FIXED_LENGTH | TOKEN_ATTR_VERIFY_HEX;
-    token.sep[3]  = '$'; token.len_min[3] = 64; token.len_max[3] = 40960; token.attr[3] = TOKEN_ATTR_VERIFY_LENGTH | TOKEN_ATTR_VERIFY_HEX;
+    // format 3 (JtR style)
+    token.sep[1]     = ':';
+    token.len_min[1] = 0;
+    token.len_max[1] = 2048;
+    token.attr[1]    = TOKEN_ATTR_VERIFY_LENGTH;
+
+    token.sep[2]  = '$';
+    token.len[2]  = 32;
+    token.attr[2] = TOKEN_ATTR_FIXED_LENGTH | TOKEN_ATTR_VERIFY_HEX;
+
+    token.sep[3]     = '$';
+    token.len_min[3] = 64;
+    token.len_max[3] = 40960;
+    token.attr[3]    = TOKEN_ATTR_VERIFY_LENGTH | TOKEN_ATTR_VERIFY_HEX;
 
     krb5tgs->format = 3;
   }
 
   const int rc_tokenizer = input_tokenizer ((const u8 *) line_buf, line_len, &token);
-  if (rc_tokenizer != PARSER_OK) return (rc_tokenizer);
+  if (rc_tokenizer != PARSER_OK) return rc_tokenizer;
 
   const u8 *checksum_pos = NULL;
   const u8 *data_pos     = NULL;
@@ -171,21 +236,30 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, void *diges
 
   if (krb5tgs->format == 1)
   {
-    checksum_pos = token.buf[3]; data_pos = token.buf[4]; data_len = token.len[4];
+    checksum_pos = token.buf[3];
+    data_pos     = token.buf[4];
+    data_len     = token.len[4];
+
     memcpy (krb5tgs->account_info, token.buf[2], token.len[2]);
   }
   else if (krb5tgs->format == 2)
   {
-    checksum_pos = token.buf[2]; data_pos = token.buf[3]; data_len = token.len[3];
+    checksum_pos = token.buf[2];
+    data_pos     = token.buf[3];
+    data_len     = token.len[3];
+
     krb5tgs->account_info[0] = 0;
   }
-  else
+  else // format 3
   {
-    checksum_pos = token.buf[2]; data_pos = token.buf[3]; data_len = token.len[3];
+    checksum_pos = token.buf[2];
+    data_pos     = token.buf[3];
+    data_len     = token.len[3];
+
     memcpy (krb5tgs->account_info, token.buf[1], token.len[1]);
   }
 
-  if (checksum_pos == NULL || data_pos == NULL) return (PARSER_SALT_VALUE);
+  if (checksum_pos == NULL || data_pos == NULL) return PARSER_SALT_VALUE;
 
   krb5tgs->checksum[0] = hex_to_u32 (checksum_pos +  0);
   krb5tgs->checksum[1] = hex_to_u32 (checksum_pos +  8);
@@ -198,21 +272,24 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, void *diges
   {
     const u8 p0 = data_pos[i + 0];
     const u8 p1 = data_pos[i + 1];
-    *edata_ptr++ = (hex_convert (p1) << 0) | (hex_convert (p0) << 4);
+
+    *edata_ptr++ = (hex_convert (p1) << 0)
+                 | (hex_convert (p0) << 4);
   }
 
   krb5tgs->edata2_len = (u32) (data_len / 2);
 
-  /* needed for hmac_md5 */
+  /* this is needed for hmac_md5 */
   *edata_ptr++ = 0x80;
 
+  // salt = checksum (lets backends pre-filter)
   salt->salt_buf[0] = krb5tgs->checksum[0];
   salt->salt_buf[1] = krb5tgs->checksum[1];
   salt->salt_buf[2] = krb5tgs->checksum[2];
   salt->salt_buf[3] = krb5tgs->checksum[3];
   salt->salt_len    = 16;
 
-  /* set digest to checksum; device compares recomputed HMAC to this */
+  // digest = checksum; device recomputes and compares
   digest[0] = krb5tgs->checksum[0];
   digest[1] = krb5tgs->checksum[1];
   digest[2] = krb5tgs->checksum[2];
