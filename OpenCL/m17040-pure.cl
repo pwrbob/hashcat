@@ -18,7 +18,7 @@
 typedef struct gpg
 {
   u32 cipher_algo;
-  u32 iv[4];  // TODO make this dynamic based on the input hash.. iv_size can be 8 bytes or 16 bytes
+  u32 iv[4];
   u32 iv_size;
   u32 modulus_size;
   u32 encrypted_data[384];
@@ -114,8 +114,8 @@ DECLSPEC void cast128_decrypt_cfb (GLOBAL_AS const u32 *encrypted_data, int data
   PRIVATE_AS u8 *key8 = (PRIVATE_AS u8*)key;
   PRIVATE_AS u8 *iv8 = (PRIVATE_AS u8*)iv;
 
-  /* --- set ESSIV: take first 8 bytes of the IV, rest stay zero --- */
-  for (int j = 0; j < 8; j++)
+  // set IV
+  for (int j = 0; j < 16; j++)
   {
     essiv[j] = iv8[j];
   }

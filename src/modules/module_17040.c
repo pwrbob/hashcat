@@ -45,7 +45,7 @@ const char *module_st_pass        (MAYBE_UNUSED const hashconfig_t *hashconfig, 
 typedef struct gpg
 {
   u32 cipher_algo;
-  u32 iv[4];  // TODO make this dynamic based on the input hash.. iv_size can be 8 bytes or 16 bytes
+  u32 iv[4];
   u32 iv_size;
   u32 modulus_size;
   u32 encrypted_data[384];
