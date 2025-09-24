@@ -45,16 +45,16 @@ DECLSPEC void aes128_decrypt_ocb (
   PRIVATE_AS const u32 *offset_be,
   GLOBAL_AS  const u32 *in,
   PRIVATE_AS       u32 *out,
-  CONSTANT_AS u32a *s_te0,
-  CONSTANT_AS u32a *s_te1,
-  CONSTANT_AS u32a *s_te2,
-  CONSTANT_AS u32a *s_te3,
-  CONSTANT_AS u32a *s_te4,
-  CONSTANT_AS u32a *s_td0,
-  CONSTANT_AS u32a *s_td1,
-  CONSTANT_AS u32a *s_td2,
-  CONSTANT_AS u32a *s_td3,
-  CONSTANT_AS u32a *s_td4)
+  SHM_TYPE u32a *s_te0,
+  SHM_TYPE u32a *s_te1,
+  SHM_TYPE u32a *s_te2,
+  SHM_TYPE u32a *s_te3,
+  SHM_TYPE u32a *s_te4,
+  SHM_TYPE u32a *s_td0,
+  SHM_TYPE u32a *s_td1,
+  SHM_TYPE u32a *s_td2,
+  SHM_TYPE u32a *s_td3,
+  SHM_TYPE u32a *s_td4)
 {
   // L_* = E_k(0^128), L_$ = dbl(L_*), L_0 = dbl(L_$)
   u32 Z[4] = { 0, 0, 0, 0 };
@@ -439,11 +439,11 @@ KERNEL_FQ KERNEL_FA void m17050_comp (KERN_ATTR_TMPS_ESALT (gpg_tmp_t, gpg_t))
 
   SYNC_THREADS ();
 #else
-  CONSTANT_AS u32a *s_te0 = te0;  CONSTANT_AS u32a *s_te1 = te1;  CONSTANT_AS u32a *s_te2 = te2;
-  CONSTANT_AS u32a *s_te3 = te3;  CONSTANT_AS u32a *s_te4 = te4;
+  SHM_TYPE u32a *s_te0 = te0;  SHM_TYPE u32a *s_te1 = te1;  SHM_TYPE u32a *s_te2 = te2;
+  SHM_TYPE u32a *s_te3 = te3;  SHM_TYPE u32a *s_te4 = te4;
 
-  CONSTANT_AS u32a *s_td0 = td0;  CONSTANT_AS u32a *s_td1 = td1;  CONSTANT_AS u32a *s_td2 = td2;
-  CONSTANT_AS u32a *s_td3 = td3;  CONSTANT_AS u32a *s_td4 = td4;
+  SHM_TYPE u32a *s_td0 = td0;  SHM_TYPE u32a *s_td1 = td1;  SHM_TYPE u32a *s_td2 = td2;
+  SHM_TYPE u32a *s_td3 = td3;  SHM_TYPE u32a *s_td4 = td4;
 #endif
 
   if (gid >= GID_CNT) return;
