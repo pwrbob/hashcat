@@ -377,11 +377,6 @@ KERNEL_FQ KERNEL_FA void m17040_loop (KERN_ATTR_TMPS_ESALT (gpg_tmp_t, gpg_t))
 
 KERNEL_FQ KERNEL_FA void m17040_comp (KERN_ATTR_TMPS_ESALT (gpg_tmp_t, gpg_t))
 {
-  // not in use here, special case...
-}
-
-KERNEL_FQ KERNEL_FA void m17040_aux1 (KERN_ATTR_TMPS_ESALT (gpg_tmp_t, gpg_t))
-{
   /**
    * modifier
    */
