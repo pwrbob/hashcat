@@ -48,6 +48,7 @@ typedef struct gpg
 {
   u32 cipher_algo;
   u32 iv[4];  // TODO make this dynamic based on the input hash.. iv_size can be 8 bytes or 16 bytes
+  u32 iv_size;
   u32 modulus_size;
   u32 encrypted_data[384];
   u32 encrypted_data_size;
@@ -263,10 +264,11 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
   gpg->encrypted_data_size = encrypted_data_size;
 
   // Check String2Key parameters
-
-  if ((hc_strtoul ((const char *) token.buf[5], NULL, 10) !=   1) && (hc_strtoul ((const char *) token.buf[5], NULL, 10) !=   3)) {
-     return (PARSER_HASH_VALUE); // for us this "String2Key parameter 1" is 1 instead of 3, no idea what that means..
+  const int s2ktype = hc_strtoul ((const char *) token.buf[5], NULL, 10);
+  if ((s2ktype != 1) && (s2ktype != 3)) {
+     return (PARSER_HASH_VALUE); // "String2Key parameter can be 1 or 3: salted or salted&iterated
   }
+  // we use salt->salt_iter to save the s2ktype and send it to the kernel
 
   // 100 to 110 Private/Experimental S2K
   if (hc_strtoul ((const char *) token.buf[6], NULL, 10) != 254) return (PARSER_HASH_VALUE);
@@ -274,45 +276,37 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 
   // Cipher algo
   const int cipher_algo = hc_strtoul ((const char *) token.buf[8], NULL, 10);
-
   if (cipher_algo != 3) return (PARSER_CIPHER);
-
   gpg->cipher_algo = cipher_algo;
 
   // IV (size)
-
-  // if (hc_strtoul ((const char *) token.buf[9], NULL, 10) != sizeof (gpg->iv)) {
-  //   // printf("hc_strtoul ((const char *) token.buf[9]=%d\n", (const char *) token.buf[9], NULL, 10);
-  //   // printf("sizeof (gpg->iv)=%d\n", sizeof (gpg->iv));
-  //   return (PARSER_IV_LENGTH);
-  // }
-  // const int iv_size = hex_decode ((const u8 *) token.buf[10], token.len[10], (u8 *) gpg->iv);
-
+  if (hc_strtoul ((const char *) token.buf[9], NULL, 10) > sizeof (gpg->iv)) {
+    // printf("hc_strtoul ((const char *) token.buf[9]=%d\n", (const char *) token.buf[9], NULL, 10);
+    // printf("sizeof (gpg->iv)=%d\n", sizeof (gpg->iv));
+    return (PARSER_IV_LENGTH);
+  }
+  memset(gpg->iv, 0, sizeof(gpg->iv));
+  const int iv_size = hex_decode ((const u8 *) token.buf[10], token.len[10], (u8 *) gpg->iv);
   // if (iv_size != sizeof (gpg->iv)){
   //   return (PARSER_IV_LENGTH);
   // }
+  gpg->iv_size = iv_size;
 
   // Salt Iter
-
   const u32 salt_iter = hc_strtoul ((const char *) token.buf[11], NULL, 10);
-
-  if (salt_iter != 0) return (PARSER_HASH_VALUE); // only accept 0 for now
-  if(salt_iter ==0){  salt->salt_iter = 8; } // just once should work? TODO not sure why I cannot change this to zero / remove the salt_iter completely..
-  // else {
-  //   if (salt_iter < 8 || salt_iter > 65011712){ return (PARSER_SALT_ITERATION); }
-  //   else {
-  //     salt->salt_iter = salt_iter;
-  //   }
-  // }
+  // if (salt_iter != 0) return (PARSER_HASH_VALUE); // only accept 0 for now
+  if(salt_iter == 0)
+  {
+    salt->salt_iter = 1;
+  }
+  else
+  {
+    salt->salt_iter = salt_iter;
+  }
 
   // Salt Value
-
-  salt->salt_repeats = gpg->cipher_algo == 7 ? 0 : 1; // "minus one" // TODO check this?
-
   salt->salt_len = hex_decode (token.buf[12], token.len[12], (u8 *) salt->salt_buf);
-
   if (salt->salt_len != 8) return (PARSER_SALT_LENGTH);
-
   // hash fake
   digest[0] = gpg->iv[0];
   digest[1] = gpg->iv[1];
@@ -337,14 +331,14 @@ int module_hash_encode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
     gpg->encrypted_data_size,
     gpg->modulus_size,
     encrypted_data,
-    1, /* version (major?) */
+    (salt->salt_iter == 1) ? 1 : 3, /* s2ktype */
     254, /* version (minor?) */
     2, /* key cipher (sha-1) */
     gpg->cipher_algo,
     8, /*iv_size*/
     byte_swap_32 (gpg->iv[0]),
     byte_swap_32 (gpg->iv[1]),
-    0, /* salt_iter is always zero */
+    (salt->salt_iter == 1) ? 0 : salt->salt_iter, /* salt_iter */
     byte_swap_32 (salt->salt_buf[0]),
     byte_swap_32 (salt->salt_buf[1]));
 
