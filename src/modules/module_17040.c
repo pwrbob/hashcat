@@ -10,6 +10,7 @@
 #include "convert.h"
 #include "shared.h"
 
+static const u32 GPG_S2K_MIN_ITERATIONS = 8u; /* minimal internal loop count for kernel compatibility */
 static const u32   ATTACK_EXEC    = ATTACK_EXEC_OUTSIDE_KERNEL;
 static const u32   DGST_POS0      = 0;
 static const u32   DGST_POS1      = 1;
@@ -284,8 +285,11 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 
   const u32 salt_iter = hc_strtoul ((const char *) token.buf[11], NULL, 10);
 
-  if (salt_iter != 0) return (PARSER_HASH_VALUE); // only accept 0 for now
-  if(salt_iter ==0){  salt->salt_iter = 8; } // just once should work? TODO not sure why I cannot change this to zero / remove the salt_iter completely..
+  if (salt_iter != 0) return (PARSER_HASH_VALUE); // protocol: OpenPGP S2K Type 1 carries no iteration count (must be 0)
+  if(salt_iter ==0){  salt->salt_iter = GPG_S2K_MIN_ITERATIONS; } /* OpenPGP (RFC 4880) S2K Type 1 (Salted) has no iteration parameter (only Type 3 iterates).
+   * Kernels/autotune require a strictly positive loop count for loop sizing (kernel_power, etc.),
+   * so protocol "0" is mapped to a minimal internal value. Remove if kernels accept 0 later.
+   */
   // else {
   //   if (salt_iter < 8 || salt_iter > 65011712){ return (PARSER_SALT_ITERATION); }
   //   else {
