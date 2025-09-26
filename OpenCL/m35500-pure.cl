@@ -63,7 +63,6 @@ KERNEL_FQ KERNEL_FA void m35500_init (KERN_ATTR_TMPS (bcrypt_tmp_t))
   if (gid >= GID_CNT) return;
 
   // "wp-sha384" key
-  // Only works with 32-length array, unsure why
   const u32 key[32] = { 0x732D7077, 0x38336168, 0x00000034, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
   sha384_hmac_ctx_t ctx0;
