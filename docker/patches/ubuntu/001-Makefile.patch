@@ -1,5 +1,5 @@
 diff --git a/src/Makefile b/src/Makefile
-index 1f1987fbe..05e2c34da 100644
+index 1f1987fbe..4f89b8d63 100644
 --- a/src/Makefile
 +++ b/src/Makefile
 @@ -10,6 +10,7 @@ PRODUCTION_VERSION      := v7.1.2
@@ -55,7 +55,45 @@ index 1f1987fbe..05e2c34da 100644
  
  ##
  ## Native compilation target
-@@ -917,24 +931,77 @@ WIN_PYTHON              := /opt/win-python
+@@ -552,23 +566,31 @@ clean:
+ 	$(RM) -rf modules/*.dSYM
+ 	$(RM) -rf bridges/*.dSYM
+ 	$(RM) -rf feeds/*.dSYM
+-	$(RM) -f modules/*.dll
+-	$(RM) -f bridges/*.dll
++	$(RM) -rf *.dSYM
+ 	$(RM) -f bridges/subs/*.dll
+-	$(RM) -f feeds/*.dll
+-	$(RM) -f modules/*.so
+-	$(RM) -f bridges/*.so
+ 	$(RM) -f bridges/subs/*.so
++	$(RM) -f bridges/subs/*.su
++	$(RM) -f bridges/*.dll
++	$(RM) -f bridges/*.so
++	$(RM) -f bridges/*.su
++	$(RM) -f feeds/*.dll
+ 	$(RM) -f feeds/*.so
++	$(RM) -f feeds/*.su
++	$(RM) -f modules/*.dll
++	$(RM) -f modules/*.so
++	$(RM) -f modules/*.su
+ 	$(RM) -f obj/*/*/*.o
++	$(RM) -f obj/*/*/*.su
+ 	$(RM) -f obj/*/*.o
++	$(RM) -f obj/*/*.su
+ 	$(RM) -f obj/*.o
++	$(RM) -f obj/*.su
+ 	$(RM) -f obj/*.a
+-	$(RM) -rf *.dSYM
+ 	$(RM) -f *.dylib
+ 	$(RM) -f *.bin *.exe
+ 	$(RM) -f *.pid
+ 	$(RM) -f *.log
++	$(RM) -f *.su
+ 	$(RM) -f core
+ 	$(RM) -rf *.induct
+ 	$(RM) -rf *.outfiles
+@@ -917,24 +939,77 @@ WIN_PYTHON              := /opt/win-python
  CFLAGS_CROSS_LINUX      := $(CFLAGS)
  CFLAGS_CROSS_LINUX      += -fPIC
  CFLAGS_CROSS_LINUX      += -DWITH_HWMON
