@@ -120,7 +120,7 @@ if not rounds:
     rounds = DEFAULT_ROUNDS
 else:
     rounds = int(rounds)
-print(crypt(b"$word", "$salt", rounds))
+print(crypt(b"$word", "$salt", rounds), end = "")
 
 END_CODE
 
