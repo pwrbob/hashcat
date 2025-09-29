@@ -1,5 +1,5 @@
 diff --git a/src/Makefile b/src/Makefile
-index 1f1987fbe..4f89b8d63 100644
+index 1f1987fbe..c01c50ac6 100644
 --- a/src/Makefile
 +++ b/src/Makefile
 @@ -10,6 +10,7 @@ PRODUCTION_VERSION      := v7.1.2
@@ -10,20 +10,24 @@ index 1f1987fbe..4f89b8d63 100644
  USE_SYSTEM_LZMA         ?= 0
  USE_SYSTEM_ZLIB         ?= 0
  USE_SYSTEM_OPENCL       ?= 0
-@@ -201,12 +202,23 @@ COMPTIME                := $(shell date +%s)
+@@ -201,12 +202,27 @@ COMPTIME                := $(shell date +%s)
  ## General compiler and linker options
  ##
  
 +CFLAGS                  := $(CFLAGS)
  LFLAGS                  := $(LDFLAGS)
  
-+#ifeq ($(DEBUG),1)
++ifeq ($(DEBUG),1)
 +CFLAGS                  += -fstack-usage
-+#endif
++endif
 +
 +ifeq ($(ENABLE_LTO),1)
 +CFLAGS                  += -flto=auto -Wno-unknown-warning-option
 +LFLAGS                  += -flto=auto -Wno-lto-type-mismatch
++endif
++
++ifeq ($(BUILD_MODE),native)
++LFLAGS                  += -fuse-ld=mold
 +endif
 +
  ifneq ($(UNAME),Darwin)
@@ -34,7 +38,7 @@ index 1f1987fbe..4f89b8d63 100644
  endif
  endif
  endif
-@@ -284,7 +296,7 @@ endif
+@@ -284,7 +300,7 @@ endif
  endif
  
  ifeq ($(DEBUG),0)
@@ -43,7 +47,7 @@ index 1f1987fbe..4f89b8d63 100644
  ifneq ($(UNAME),Darwin)
  LFLAGS                  += -s
  endif
-@@ -354,9 +366,11 @@ CFLAGS                  += -I$(DEPS_UNRAR_PATH)
+@@ -354,9 +370,11 @@ CFLAGS                  += -I$(DEPS_UNRAR_PATH)
  ifeq ($(UNAME),OpenBSD)
  LFLAGS                  += -lc++
  else
@@ -55,7 +59,7 @@ index 1f1987fbe..4f89b8d63 100644
  
  ##
  ## Native compilation target
-@@ -552,23 +566,31 @@ clean:
+@@ -552,23 +570,31 @@ clean:
  	$(RM) -rf modules/*.dSYM
  	$(RM) -rf bridges/*.dSYM
  	$(RM) -rf feeds/*.dSYM
@@ -93,7 +97,7 @@ index 1f1987fbe..4f89b8d63 100644
  	$(RM) -f core
  	$(RM) -rf *.induct
  	$(RM) -rf *.outfiles
-@@ -917,24 +939,77 @@ WIN_PYTHON              := /opt/win-python
+@@ -917,24 +943,71 @@ WIN_PYTHON              := /opt/win-python
  CFLAGS_CROSS_LINUX      := $(CFLAGS)
  CFLAGS_CROSS_LINUX      += -fPIC
  CFLAGS_CROSS_LINUX      += -DWITH_HWMON
@@ -131,13 +135,7 @@ index 1f1987fbe..4f89b8d63 100644
 +LFLAGS_CROSS_LINUX      += -static-libstdc++
 +endif
 +
-+ifeq ($(ENABLE_LTO),1)
-+ifneq (,$(findstring clang, $(CC_LINUX)))
-+LFLAGS_CROSS_LINUX      += -fuse-ld=lld
-+else
-+LFLAGS_CROSS_LINUX      += -fuse-ld=gold
-+endif
-+endif
++LFLAGS_CROSS_LINUX      += -fuse-ld=mold
 +
  LFLAGS_CROSS_WIN        := $(LFLAGS)
 +ifneq ($(UNAME),Darwin)
@@ -165,7 +163,7 @@ index 1f1987fbe..4f89b8d63 100644
 +ifeq ($(ENABLE_LTO),1)
 +ifneq (,$(findstring clang, $(CC_WIN)))
 +LFLAGS_CROSS_WIN        += -fuse-ld=lld
-+LFLAGS_CROSS_WIN        += -Wl,--stack,16777216
++LFLAGS_CROSS_WIN        += -Wl,--stack,0x200000
 +endif
 +endif
 +

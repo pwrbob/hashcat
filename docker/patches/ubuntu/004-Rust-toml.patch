@@ -1,0 +1,77 @@
+diff --git a/Rust/bridges/dynamic_hash/Cargo.toml b/Rust/bridges/dynamic_hash/Cargo.toml
+index 7dc02ffe1..2b964405b 100644
+--- a/Rust/bridges/dynamic_hash/Cargo.toml
++++ b/Rust/bridges/dynamic_hash/Cargo.toml
+@@ -24,4 +24,8 @@ thread_local = "1.1.9"
+ bindgen = "0.72.0"
+ 
+ [profile.release]
++lto = true
++opt-level = "z"
++codegen-units = 1
+ strip = "symbols"
++panic = "abort"
+diff --git a/Rust/bridges/generic_hash/Cargo.toml b/Rust/bridges/generic_hash/Cargo.toml
+index 246d87400..93b7d5772 100644
+--- a/Rust/bridges/generic_hash/Cargo.toml
++++ b/Rust/bridges/generic_hash/Cargo.toml
+@@ -14,4 +14,8 @@ crate-type = ["cdylib"]
+ bindgen = "0.72.0"
+ 
+ [profile.release]
++lto = true
++opt-level = "z"
++codegen-units = 1
+ strip = "symbols"
++panic = "abort"
+diff --git a/Rust/feeds/dummy/Cargo.toml b/Rust/feeds/dummy/Cargo.toml
+index 01b095baf..19d5280a7 100644
+--- a/Rust/feeds/dummy/Cargo.toml
++++ b/Rust/feeds/dummy/Cargo.toml
+@@ -9,4 +9,8 @@ edition = "2024"
+ crate-type = ["cdylib"]
+ 
+ [profile.release]
++lto = true
++opt-level = "z"
++codegen-units = 1
+ strip = "symbols"
++panic = "abort"
+diff --git a/src/bridges/bridge_rust_generic_hash.mk b/src/bridges/bridge_rust_generic_hash.mk
+index d2008e46d..a6f53630e 100644
+--- a/src/bridges/bridge_rust_generic_hash.mk
++++ b/src/bridges/bridge_rust_generic_hash.mk
+@@ -42,12 +42,12 @@ RESET := $(shell tput sgr 0)
+ ifeq ($(CARGO_PRESENT),true)
+ 
+ $(RUST_SUBS_DIR)/%.so: $(RUST_SCAN_DIR)/%/Cargo.toml
+-	$(RUST_CARGO) build --quiet $(RUST_MODE_FLAG) --manifest-path $^
++	RUSTFLAGS="-C link-arg=-fuse-ld=mold" $(RUST_CARGO) build --quiet $(RUST_MODE_FLAG) --manifest-path $^
+ 	cp Rust/bridges/$*/target/$(RUST_BUILD_MODE)/lib$*.$(RUST_LIB_EXT) $@
+ ifeq ($(RUSTUP_PRESENT),true)
+ $(RUST_SUBS_DIR)/%.dll: $(RUST_SCAN_DIR)/%/Cargo.toml
+ 	$(RUST_RUSTUP) --quiet target add x86_64-pc-windows-gnu
+-	$(RUST_CARGO) build --quiet $(RUST_MODE_FLAG) --manifest-path $^ --target x86_64-pc-windows-gnu
++	RUSTFLAGS="-C link-arg=-fuse-ld=lld" $(RUST_CARGO) build --quiet $(RUST_MODE_FLAG) --manifest-path $^ --target x86_64-pc-windows-gnu
+ 	cp Rust/bridges/$*/target/x86_64-pc-windows-gnu/$(RUST_BUILD_MODE)/$*.dll $@
+ else
+ $(RUST_SUBS_DIR)/%.dll: $(RUST_SCAN_DIR)/%/Cargo.toml
+diff --git a/src/feeds/rust_support.mk b/src/feeds/rust_support.mk
+index 4fe94feda..6348acb22 100644
+--- a/src/feeds/rust_support.mk
++++ b/src/feeds/rust_support.mk
+@@ -28,12 +28,12 @@ else
+ endif
+ 
+ feeds/rust_%.so: $(RUST_SCAN_DIR)/%/Cargo.toml
+-	$(RUST_CARGO) build --quiet $(RUST_MODE_FLAG) --manifest-path $^
++	RUSTFLAGS="-C link-arg=-fuse-ld=mold" $(RUST_CARGO) build --quiet $(RUST_MODE_FLAG) --manifest-path $^
+ 	cp Rust/feeds/$*/target/$(RUST_BUILD_MODE)/lib$*.$(RUST_LIB_EXT) $@
+ ifeq ($(RUSTUP_PRESENT),true)
+ feeds/rust_%.dll: $(RUST_SCAN_DIR)/%/Cargo.toml
+ 	$(RUST_RUSTUP) --quiet target add x86_64-pc-windows-gnu
+-	$(RUST_CARGO) build --quiet $(RUST_MODE_FLAG) --manifest-path $^ --target x86_64-pc-windows-gnu
++	RUSTFLAGS="-C link-arg=-fuse-ld=lld" $(RUST_CARGO) build --quiet $(RUST_MODE_FLAG) --manifest-path $^ --target x86_64-pc-windows-gnu
+ 	cp Rust/feeds/$*/target/x86_64-pc-windows-gnu/$(RUST_BUILD_MODE)/$*.dll $@
+ else
+ feeds/rust_%.dll: $(RUST_SCAN_DIR)/%/Cargo.toml
