@@ -30,6 +30,7 @@ static const char *ST_HASH        = "$H$9ZtU3uM7Twc8X53ImNRhaec4b3QHJ91";
 typedef struct phpass_tmp
 {
   u32 digest_buf[4];
+  u32 md5_buf[8];
 } phpass_tmp_t;
 
 static const char *SIGNATURE_PHPASS1 = "$P$";

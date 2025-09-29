@@ -34,6 +34,7 @@
 typedef struct phpass_tmp
 {
   u32 digest_buf[4];
+  u32 md5_buf[8];
 } phpass_tmp_t;
 
 KERNEL_FQ void m00410_init (KERN_ATTR_TMPS (phpass_tmp_t))
@@ -78,36 +79,41 @@ KERNEL_FQ void m00410_init (KERN_ATTR_TMPS (phpass_tmp_t))
   u32 c = pw_ctx.h[2];
   u32 d = pw_ctx.h[3];
 
-  u32 w0[4];
-  u32 w1[4];
-  u32 w2[4];
-  u32 w3[4];
+  u32 w[16];
 
-  w0[0] = uint_to_hex_lower8 ((a >>  0) & 255) <<  0
+  w[ 0] = uint_to_hex_lower8 ((a >>  0) & 255) <<  0
         | uint_to_hex_lower8 ((a >>  8) & 255) << 16;
-  w0[1] = uint_to_hex_lower8 ((a >> 16) & 255) <<  0
+  w[ 1] = uint_to_hex_lower8 ((a >> 16) & 255) <<  0
         | uint_to_hex_lower8 ((a >> 24) & 255) << 16;
-  w0[2] = uint_to_hex_lower8 ((b >>  0) & 255) <<  0
+  w[ 2] = uint_to_hex_lower8 ((b >>  0) & 255) <<  0
         | uint_to_hex_lower8 ((b >>  8) & 255) << 16;
-  w0[3] = uint_to_hex_lower8 ((b >> 16) & 255) <<  0
+  w[ 3] = uint_to_hex_lower8 ((b >> 16) & 255) <<  0
         | uint_to_hex_lower8 ((b >> 24) & 255) << 16;
-  w1[0] = uint_to_hex_lower8 ((c >>  0) & 255) <<  0
+  w[ 4] = uint_to_hex_lower8 ((c >>  0) & 255) <<  0
         | uint_to_hex_lower8 ((c >>  8) & 255) << 16;
-  w1[1] = uint_to_hex_lower8 ((c >> 16) & 255) <<  0
+  w[ 5] = uint_to_hex_lower8 ((c >> 16) & 255) <<  0
         | uint_to_hex_lower8 ((c >> 24) & 255) << 16;
-  w1[2] = uint_to_hex_lower8 ((d >>  0) & 255) <<  0
+  w[ 6] = uint_to_hex_lower8 ((d >>  0) & 255) <<  0
         | uint_to_hex_lower8 ((d >>  8) & 255) << 16;
-  w1[3] = uint_to_hex_lower8 ((d >> 16) & 255) <<  0
+  w[ 7] = uint_to_hex_lower8 ((d >> 16) & 255) <<  0
         | uint_to_hex_lower8 ((d >> 24) & 255) << 16;
+  w[ 8] = 0;
+  w[ 9] = 0;
+  w[10] = 0;
+  w[11] = 0;
+  w[12] = 0;
+  w[13] = 0;
+  w[14] = 0;
+  w[15] = 0;
 
-  w2[0] = 0;
-  w2[1] = 0;
-  w2[2] = 0;
-  w2[3] = 0;
-  w3[0] = 0;
-  w3[1] = 0;
-  w3[2] = 0;
-  w3[3] = 0;
+  tmps[gid].md5_buf[0] = w[0];
+  tmps[gid].md5_buf[1] = w[1];
+  tmps[gid].md5_buf[2] = w[2];
+  tmps[gid].md5_buf[3] = w[3];
+  tmps[gid].md5_buf[4] = w[4];
+  tmps[gid].md5_buf[5] = w[5];
+  tmps[gid].md5_buf[6] = w[6];
+  tmps[gid].md5_buf[7] = w[7];
 
   md5_ctx_t md5_ctx;
 
@@ -115,7 +121,7 @@ KERNEL_FQ void m00410_init (KERN_ATTR_TMPS (phpass_tmp_t))
 
   md5_update_global (&md5_ctx, salt_bufs[SALT_POS_HOST].salt_buf, salt_bufs[SALT_POS_HOST].salt_len);
 
-  md5_update_64 (&md5_ctx, w0, w1, w2, w3, 32);
+  md5_update (&md5_ctx, w, 32);
 
   md5_final (&md5_ctx);
 
@@ -142,85 +148,18 @@ KERNEL_FQ void m00410_loop (KERN_ATTR_TMPS (phpass_tmp_t))
   const u64 lid = get_local_id (0);
   const u64 lsz = get_local_size (0);
 
-  /**
-  * bin2asc table
-  */
-
-  LOCAL_VK u32 l_bin2asc[256];
-
-  for (u32 i = lid; i < 256; i += lsz)
-  {
-    const u32 i0 = (i >> 0) & 15;
-    const u32 i1 = (i >> 4) & 15;
-
-    l_bin2asc[i] = ((i0 < 10) ? '0' + i0 : 'a' - 10 + i0) << 8
-                 | ((i1 < 10) ? '0' + i1 : 'a' - 10 + i1) << 0;
-  }
-
-  SYNC_THREADS ();
-
   if (gid >= GID_CNT) return;
 
-  md5_ctx_t pw_ctx;
+  u32 w[8];
 
-  md5_init (&pw_ctx);
-  
-  md5_update_global (&pw_ctx, pws[gid].i, pws[gid].pw_len);
-  
-  md5_final (&pw_ctx);
-
-  u32 a = pw_ctx.h[0];
-  u32 b = pw_ctx.h[1];
-  u32 c = pw_ctx.h[2];
-  u32 d = pw_ctx.h[3];
-
-  u32 w0[4];
-  u32 w1[4];
-  u32 w2[4];
-  u32 w3[4];
-
-  w0[0] = uint_to_hex_lower8 ((a >>  0) & 255) <<  0
-        | uint_to_hex_lower8 ((a >>  8) & 255) << 16;
-  w0[1] = uint_to_hex_lower8 ((a >> 16) & 255) <<  0
-        | uint_to_hex_lower8 ((a >> 24) & 255) << 16;
-  w0[2] = uint_to_hex_lower8 ((b >>  0) & 255) <<  0
-        | uint_to_hex_lower8 ((b >>  8) & 255) << 16;
-  w0[3] = uint_to_hex_lower8 ((b >> 16) & 255) <<  0
-        | uint_to_hex_lower8 ((b >> 24) & 255) << 16;
-  w1[0] = uint_to_hex_lower8 ((c >>  0) & 255) <<  0
-        | uint_to_hex_lower8 ((c >>  8) & 255) << 16;
-  w1[1] = uint_to_hex_lower8 ((c >> 16) & 255) <<  0
-        | uint_to_hex_lower8 ((c >> 24) & 255) << 16;
-  w1[2] = uint_to_hex_lower8 ((d >>  0) & 255) <<  0
-        | uint_to_hex_lower8 ((d >>  8) & 255) << 16;
-  w1[3] = uint_to_hex_lower8 ((d >> 16) & 255) <<  0
-        | uint_to_hex_lower8 ((d >> 24) & 255) << 16;
-  w2[0] = 0;
-  w2[1] = 0;
-  w2[2] = 0;
-  w2[3] = 0;
-  w3[0] = 0;
-  w3[1] = 0;
-  w3[2] = 0;
-  w3[3] = 0;
-
-  u32 w[16];
-  w[0] = w0[0];
-  w[1] = w0[1];
-  w[2] = w0[2];
-  w[3] = w0[3];
-  w[4] = w1[0];
-  w[5] = w1[1];
-  w[6] = w1[2];
-  w[7] = w1[3];
-  w[8] = w2[0];
-  w[9] = w2[1];
-  w[10] = w2[2];
-  w[11] = w2[3];
-  w[12] = w3[0];
-  w[13] = w3[1];
-  w[14] = w3[2];
-  w[15] = w3[3];
+  w[0] = tmps[gid].md5_buf[0];
+  w[1] = tmps[gid].md5_buf[1];
+  w[2] = tmps[gid].md5_buf[2];
+  w[3] = tmps[gid].md5_buf[3];
+  w[4] = tmps[gid].md5_buf[4];
+  w[5] = tmps[gid].md5_buf[5];
+  w[6] = tmps[gid].md5_buf[6];
+  w[7] = tmps[gid].md5_buf[7];
 
   const u32 pw_len = 32;
 
@@ -243,10 +182,16 @@ KERNEL_FQ void m00410_loop (KERN_ATTR_TMPS (phpass_tmp_t))
   md5_ctx.w0[1] = digest[1];
   md5_ctx.w0[2] = digest[2];
   md5_ctx.w0[3] = digest[3];
+  md5_ctx.w1[0] = w[0];
+  md5_ctx.w1[1] = w[1];
+  md5_ctx.w1[2] = w[2];
+  md5_ctx.w1[3] = w[3];
+  md5_ctx.w2[0] = w[4];
+  md5_ctx.w2[1] = w[5];
+  md5_ctx.w2[2] = w[6];
+  md5_ctx.w2[3] = w[7];
 
-  md5_ctx.len = 16;
-
-  md5_update (&md5_ctx, w, pw_len);
+  md5_ctx.len = 48;
 
   md5_final (&md5_ctx);
 
@@ -265,10 +210,16 @@ KERNEL_FQ void m00410_loop (KERN_ATTR_TMPS (phpass_tmp_t))
       md5_ctx.w0[1] = digest[1];
       md5_ctx.w0[2] = digest[2];
       md5_ctx.w0[3] = digest[3];
-
-      md5_ctx.len = 16;
-
-      md5_update (&md5_ctx, w, pw_len);
+      md5_ctx.w1[0] = w[0];
+      md5_ctx.w1[1] = w[1];
+      md5_ctx.w1[2] = w[2];
+      md5_ctx.w1[3] = w[3];
+      md5_ctx.w2[0] = w[4];
+      md5_ctx.w2[1] = w[5];
+      md5_ctx.w2[2] = w[6];
+      md5_ctx.w2[3] = w[7];
+      
+      md5_ctx.len = 48;
 
       md5_final (&md5_ctx);
 
