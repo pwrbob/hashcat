@@ -441,12 +441,14 @@ ENV PATH=/root/.cargo/bin:$PATH
 ARG CACHE_BUST=1 \
     ENABLE_LTO=1 \
     MAINTAINER_MODE=1 \
+    USE_MOLD=1 \
     USE_CLANG=1 \
     USE_GCC=0
 
 ENV CACHE_BUST=${CACHE_BUST} \
     ENABLE_LTO=${ENABLE_LTO} \
     MAINTAINER_MODE=${MAINTAINER_MODE} \
+    USE_MOLD=${USE_MOLD} \
     USE_CLANG=${USE_CLANG} \
     USE_GCC=${USE_GCC}
 
@@ -458,7 +460,8 @@ RUN bash -c 'shopt -s nullglob; cd /root/hashcat; for p in /root/patches/*.patch
 
 RUN if [ "${USE_CLANG}" = "1" ]; then \
       cp -af /root/hashcat /root/hashcat-clang && cd /root/hashcat-clang && \
-      make ENABLE_LTO=${ENABLE_LTO} \
+      make USE_MOLD=${USE_MOLD} \
+           ENABLE_LTO=${ENABLE_LTO} \
            MAINTAINER_MODE=${MAINTAINER_MODE} \
            AR=llvm-ar AR_LINUX=llvm-ar AR_WIN=llvm-ar \
            CC=clang CC_LINUX=clang CC_WIN=clang \
@@ -479,7 +482,8 @@ RUN if [ "${USE_CLANG}" = "1" ]; then \
 
 RUN if [ "${USE_GCC}" = "1" ]; then \
       cp -af /root/hashcat /root/hashcat-gcc && cd /root/hashcat-gcc && \
-      make ENABLE_LTO=${ENABLE_LTO} \
+      make USE_MOLD=${USE_MOLD} \
+           ENABLE_LTO=${ENABLE_LTO} \
            MAINTAINER_MODE=${MAINTAINER_MODE} \
            binaries -s -j 2>&1 | stdbuf -oL -eL  tee -a /root/binaries.gcc.log && \
       tools/package_bin.sh && \
@@ -506,6 +510,7 @@ RUN echo "WIN_PYTHON_VERSION: ${WIN_PYTHON_VERSION}" >> /root/toolchain-info.log
     echo "RUST_VERSION: ${RUST_VERSION}" >> /root/toolchain-info.log && \
     echo "ENABLE_LTO: ${ENABLE_LTO}" >> /root/toolchain-info.log && \
     echo "MAINTAINER_MODE: ${MAINTAINER_MODE}" >> /root/toolchain-info.log && \
+    echo "USE_MOLD: ${USE_MOLD}" >> /root/toolchain-info.log && \
     echo "USE_CLANG: ${USE_CLANG}" >> /root/toolchain-info.log && \
     echo "USE_GCC: ${USE_GCC}" >> /root/toolchain-info.log && \
     echo "WITH_CODE_ANALYSIS: ${WITH_CODE_ANALYSIS}" >> /root/toolchain-info.log && \
@@ -522,9 +527,9 @@ RUN if [ "$WITH_CODE_ANALYSIS" -eq "1" ]; then \
       echo "Checks: 'clang-analyzer-*,cppcoreguidelines-*,-cppcoreguidelines-avoid-magic-numbers,modernize-*,performance-*,-modernize-use-trailing-return-type,-clang-diagnostic-unused-command-line-argument'" > /root/hashcat/.clang-tidy && \
       echo "HeaderFilterRegex: 'src/.*'" >> /root/hashcat/.clang-tidy && \
       cd /root/hashcat && make clean -s && \
-      intercept-build make ENABLE_LTO=${ENABLE_LTO} MAINTAINER_MODE=${MAINTAINER_MODE} AR=llvm-ar AR_LINUX=llvm-ar AR_WIN=llvm-ar CC=clang CC_LINUX=clang CC_WIN=clang CXX=clang++ CXX_LINUX=clang++ CXX_WIN=clang++ linux -s -j && \
+      intercept-build make USE_MOLD=${USE_MOLD} ENABLE_LTO=${ENABLE_LTO} MAINTAINER_MODE=${MAINTAINER_MODE} AR=llvm-ar AR_LINUX=llvm-ar AR_WIN=llvm-ar CC=clang CC_LINUX=clang CC_WIN=clang CXX=clang++ CXX_LINUX=clang++ CXX_WIN=clang++ linux -s -j && \
       run-clang-tidy -p=. -export-fixes=/root/code-analysis/clang-tidy/fixes.yaml -quiet > /root/code-analysis/clang-tidy/output.log 2>&1 && make clean -s && \
-      scan-build -o /root/code-analysis/scan-build make ENABLE_LTO=${ENABLE_LTO} MAINTAINER_MODE=${MAINTAINER_MODE} AR=llvm-ar AR_LINUX=llvm-ar AR_WIN=llvm-ar CC=clang CC_LINUX=clang CC_WIN=clang CXX=clang++ CXX_LINUX=clang++ CXX_WIN=clang++ linux -s -j > /root/code-analysis/scan-build/output.log 2>&1 && make clean -s; \
+      scan-build -o /root/code-analysis/scan-build make USE_MOLD=${USE_MOLD} ENABLE_LTO=${ENABLE_LTO} MAINTAINER_MODE=${MAINTAINER_MODE} AR=llvm-ar AR_LINUX=llvm-ar AR_WIN=llvm-ar CC=clang CC_LINUX=clang CC_WIN=clang CXX=clang++ CXX_LINUX=clang++ CXX_WIN=clang++ linux -s -j > /root/code-analysis/scan-build/output.log 2>&1 && make clean -s; \
     fi
 
 CMD ["/bin/bash"]
