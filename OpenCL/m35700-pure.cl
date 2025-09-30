@@ -37,7 +37,7 @@ typedef struct phpass_tmp
   u32 md5_buf[8];
 } phpass_tmp_t;
 
-KERNEL_FQ void m00410_init (KERN_ATTR_TMPS (phpass_tmp_t))
+KERNEL_FQ void m35700_init (KERN_ATTR_TMPS (phpass_tmp_t))
 {
   /**
    * base
@@ -138,7 +138,7 @@ KERNEL_FQ void m00410_init (KERN_ATTR_TMPS (phpass_tmp_t))
   tmps[gid].digest_buf[3] = digest[3];
 }
 
-KERNEL_FQ void m00410_loop (KERN_ATTR_TMPS (phpass_tmp_t))
+KERNEL_FQ void m35700_loop (KERN_ATTR_TMPS (phpass_tmp_t))
 {
   /**
   * base
@@ -253,7 +253,7 @@ KERNEL_FQ void m00410_loop (KERN_ATTR_TMPS (phpass_tmp_t))
   tmps[gid].digest_buf[3] = digest[3];
 }
 
-KERNEL_FQ void m00410_comp (KERN_ATTR_TMPS (phpass_tmp_t))
+KERNEL_FQ void m35700_comp (KERN_ATTR_TMPS (phpass_tmp_t))
 {
   /**
    * modifier
