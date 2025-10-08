@@ -121,7 +121,6 @@ dependencies = [
 name = "generic_hash"
 version = "0.1.0"
 dependencies = [
- "bindgen",
  "hashcat-sys",
  "hex",
  "sha2",
