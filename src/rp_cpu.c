@@ -247,6 +247,44 @@ static int mangle_insert (char arr[RP_PASSWORD_SIZE], int arr_len, int upos, cha
   return (arr_len + 1);
 }
 
+static int mangle_to_hex_lower (char arr[RP_PASSWORD_SIZE], int arr_len)
+{
+  if (arr_len >= RP_PASSWORD_SIZE) return arr_len;
+
+  for (int pos = arr_len + 1; pos >= 0; pos--)
+  {
+    const u8 tbl[0x10] =
+    {
+      '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+      'a', 'b', 'c', 'd', 'e', 'f',
+    };
+
+    arr[pos * 2 + 1] = tbl[arr[pos] >>  0 & 15];
+    arr[pos * 2] = tbl[arr[pos] >>  4 & 15];
+  }
+
+  return (arr_len * 2);
+}
+
+static int mangle_to_hex_upper (char arr[RP_PASSWORD_SIZE], int arr_len)
+{
+  if (arr_len >= RP_PASSWORD_SIZE) return arr_len;
+
+  for (int pos = arr_len + 1; pos >= 0; pos--)
+  {
+    const u8 tbl[0x10] =
+    {
+      '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+      'A', 'B', 'C', 'D', 'E', 'F',
+    };
+
+    arr[pos * 2 + 1] = tbl[arr[pos] >>  0 & 15];
+    arr[pos * 2] = tbl[arr[pos] >>  4 & 15];
+  }
+
+  return (arr_len * 2);
+}
+
 static int mangle_insert_multi (char arr[RP_PASSWORD_SIZE], int arr_len, int arr_pos, char arr2[RP_PASSWORD_SIZE], int arr2_len, int arr2_pos, int arr2_cpy)
 {
   if ((arr_len + arr2_cpy) > RP_PASSWORD_SIZE) return (RULE_RC_REJECT_ERROR);
@@ -1175,6 +1213,14 @@ int _old_apply_rule (const char *rule, int rule_len, char in[RP_PASSWORD_SIZE], 
         NEXT_RPTOI (rule_new, rule_pos, upos);
         NEXT_RULEPOS (rule_pos);
         out_len = mangle_toggle_at_sep (out, out_len, rule_new[rule_pos], upos);
+        break;
+
+      case RULE_OP_MANGLE_TO_HEX_LOWER:
+        out_len = mangle_to_hex_lower(out, out_len);
+        break;
+
+      case RULE_OP_MANGLE_TO_HEX_UPPER:
+        out_len = mangle_to_hex_UPPER(out, out_len);
         break;
 
       case RULE_OP_MANGLE_REVERSE:
