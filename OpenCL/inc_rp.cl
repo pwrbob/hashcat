@@ -486,7 +486,7 @@ DECLSPEC int mangle_to_hex_lower (MAYBE_UNUSED const u8 p0, MAYBE_UNUSED const u
 
   if (out_len >= RP_PASSWORD_SIZE) return len;
 
-  for (int pos = len + 1; pos >= 0; pos--)
+  for (int pos = len - 1; pos >= 0; pos--)
   {
     const u8 c = buf[pos];
 
@@ -509,7 +509,7 @@ DECLSPEC int mangle_to_hex_upper (MAYBE_UNUSED const u8 p0, MAYBE_UNUSED const u
 
   if (out_len >= RP_PASSWORD_SIZE) return len;
 
-  for (int pos = len + 1; pos >= 0; pos--)
+  for (int pos = len - 1; pos >= 0; pos--)
   {
     const u8 c = buf[pos];
 
