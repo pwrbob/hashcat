@@ -1220,7 +1220,7 @@ int _old_apply_rule (const char *rule, int rule_len, char in[RP_PASSWORD_SIZE], 
         break;
 
       case RULE_OP_MANGLE_TO_HEX_UPPER:
-        out_len = mangle_to_hex_UPPER(out, out_len);
+        out_len = mangle_to_hex_upper(out, out_len);
         break;
 
       case RULE_OP_MANGLE_REVERSE:
