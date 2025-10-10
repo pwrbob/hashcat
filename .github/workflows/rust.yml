@@ -15,7 +15,6 @@ on:
   push:
     branches:
       - "master"
-      - "feat/*"
     tags:
       - v*
     paths:
@@ -50,7 +49,6 @@ jobs:
         with:
           toolchain: ${{ env.rust_stable }}
           components: rustfmt
-      - uses: Swatinem/rust-cache@v2
       # Check fmt
       - name: "rustfmt --check"
         # Workaround for rust-lang/cargo#7732
@@ -60,10 +58,39 @@ jobs:
             exit 1
           fi
 
-  # test all rust bridges
-  test-bridges:
+  minrust:
+    name: minrust
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install Rust ${{ env.rust_min }}
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ env.rust_min }}
+      - name: "cargo check hashcat-sys"
+        run: cargo check
+        working-directory: Rust/hashcat-sys
+      - name: "cargo check bridges"
+        run: |
+          for b in `ls`; do
+            cd ${b}
+            cargo check
+            cd ..
+          done
+        working-directory: Rust/bridges
+      - name: "cargo check feeds"
+        run: |
+          for b in `ls`; do
+            cd ${b}
+            cargo check
+            cd ..
+          done
+        working-directory: Rust/feeds
+
+  # test all rust code
+  test-rust:
     needs: basics
-    name: test all Rust bridges
+    name: test all Rust crates
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -77,36 +104,24 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
             toolchain: ${{ env.rust_stable }}
-      - name: Install cargo-nextest
-        uses: taiki-e/install-action@v2
-        with:
-          tool: cargo-nextest
-      - uses: Swatinem/rust-cache@v2
+      - name: test hashcat-sys
+        run: cargo test
+        working-directory: Rust/hashcat-sys
       - name: test all bridges
         run: |
           set -euxo pipefail
           for b in `ls`; do
             cd ${b}
-            cargo nextest run
+            cargo test
             cd ..
           done
         working-directory: Rust/bridges
-
-  minrust:
-    name: minrust
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - name: Install Rust ${{ env.rust_min }}
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: ${{ env.rust_min }}
-      - uses: Swatinem/rust-cache@v2
-      - name: "cargo check"
+      - name: test all feeds
         run: |
+          set -euxo pipefail
           for b in `ls`; do
             cd ${b}
-            cargo check
+            cargo test
             cd ..
           done
-        working-directory: Rust/bridges
+        working-directory: Rust/feeds
