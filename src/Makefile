@@ -575,6 +575,7 @@ clean:
 	$(RM) -rf kernels
 	$(RM) -rf Rust/bridges/*/target
 	$(RM) -rf Rust/feeds/*/target
+	$(RM) -rf Rust/hashcat-sys/src/bindings.rs
 
 .PHONY: distclean
 distclean: clean

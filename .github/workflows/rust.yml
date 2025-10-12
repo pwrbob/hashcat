@@ -1,0 +1,127 @@
+name: Rust tests
+
+env:
+  RUSTFLAGS: -Dwarnings
+  RUST_BACKTRACE: 1
+  RUSTUP_WINDOWS_PATH_ADD_BIN: 1
+  # Change to specific Rust release to pin
+  rust_stable: stable
+  rust_nightly: nightly-2025-01-25
+  rust_edition: '2021'
+  rust_clippy: '1.88'
+  rust_min: '1.88'
+
+on:
+  push:
+    branches:
+      - "master"
+    tags:
+      - v*
+    paths:
+      - 'Rust/**'
+      - '.github/workflows/rust.yml'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - 'Rust/**'
+      - '.github/workflows/rust.yml'
+
+jobs:
+  # Basic actions that must pass before we kick off more expensive tests.
+  basics:
+    name: basic checks
+    runs-on: ubuntu-latest
+    needs:
+      - fmt
+      - minrust
+    steps:
+      - run: exit 0
+
+  # enforce standard Rust formating (rustfmt)
+  fmt:
+    name: fmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install Rust ${{ env.rust_stable }}
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ env.rust_stable }}
+          components: rustfmt
+      # Check fmt
+      - name: "rustfmt --check"
+        # Workaround for rust-lang/cargo#7732
+        run: |
+          if ! rustfmt --check --edition ${{ env.rust_edition }} $(git ls-files '*.rs'); then
+            printf "Please run \`rustfmt --edition ${{ env.rust_edition }} \$(git ls-files '*.rs')\` to fix rustfmt errors.\nSee CONTRIBUTING.md for more details.\n" >&2
+            exit 1
+          fi
+
+  minrust:
+    name: minrust
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install Rust ${{ env.rust_min }}
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ env.rust_min }}
+      - name: "cargo check hashcat-sys"
+        run: cargo check
+        working-directory: Rust/hashcat-sys
+      - name: "cargo check bridges"
+        run: |
+          for b in `ls`; do
+            cd ${b}
+            cargo check
+            cd ..
+          done
+        working-directory: Rust/bridges
+      - name: "cargo check feeds"
+        run: |
+          for b in `ls`; do
+            cd ${b}
+            cargo check
+            cd ..
+          done
+        working-directory: Rust/feeds
+
+  # test all rust code
+  test-rust:
+    needs: basics
+    name: test all Rust crates
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          # - windows-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install Rust ${{ env.rust_stable }}
+        uses: dtolnay/rust-toolchain@stable
+        with:
+            toolchain: ${{ env.rust_stable }}
+      - name: test hashcat-sys
+        run: cargo test
+        working-directory: Rust/hashcat-sys
+      - name: test all bridges
+        run: |
+          set -euxo pipefail
+          for b in `ls`; do
+            cd ${b}
+            cargo test
+            cd ..
+          done
+        working-directory: Rust/bridges
+      - name: test all feeds
+        run: |
+          set -euxo pipefail
+          for b in `ls`; do
+            cd ${b}
+            cargo test
+            cd ..
+          done
+        working-directory: Rust/feeds
