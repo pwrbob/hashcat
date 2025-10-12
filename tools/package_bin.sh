@@ -38,6 +38,7 @@ cp    $IN/example[0123456789]*.hash     $OUT/
 cp    $IN/example[0123456789]*.cmd      $OUT/
 cp -r $IN/Python/*.py                   $OUT/Python/
 cp -r $IN/Rust/hashcat-sys/src                  $OUT/Rust/hashcat-sys/
+cp    $IN/Rust/hashcat-sys/Cargo.*              $OUT/Rust/hashcat-sys/
 cp    $IN/Rust/hashcat-sys/build.rs             $OUT/Rust/hashcat-sys/
 cp -r $IN/Rust/bridges/generic_hash/src         $OUT/Rust/bridges/generic_hash/
 cp    $IN/Rust/bridges/generic_hash/Cargo.*     $OUT/Rust/bridges/generic_hash/
