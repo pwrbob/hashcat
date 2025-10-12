@@ -79,25 +79,39 @@ jobs:
             libiconv
             libiconv-devel
             make
+            mingw-w64-x86_64-rustup
             python
+
+      - name: Setup Rustup (Windows only)
+        if: matrix.os_name_lowercase == 'windows'
+        shell: msys2 {0}
+        env:
+          PATH: /mingw64/bin:$PATH
+        run: |
+          rustup default stable
+          rustup target add x86_64-pc-windows-gnu
 
       - name: Build (Windows)
         if: matrix.os_name_lowercase == 'windows'
         shell: msys2 {0}
         env:
           SHARED: ${{ matrix.shared }}
+          PATH: /mingw64/bin:$PATH
+          WIN_PYTHON: ""
         run: make
 
       - name: Build (Linux/macOS)
         if: matrix.os_name_lowercase != 'windows'
         env:
           SHARED: ${{ matrix.shared }}
+          TERM: xterm
         run: make
 
       - name: Generate documentation
         if: matrix.os_name_lowercase == 'linux' && matrix.shared == 0
         env:
           SHARED: ${{ matrix.shared }}
+          TERM: xterm
         run: |
          cd .github/workflows/
          bash -v ./generate_docs.sh || true # make sure return code of generate docs is always successful (we don't want a build to break because of it..)

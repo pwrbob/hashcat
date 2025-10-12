@@ -14,6 +14,10 @@ $ pacman -S make
 $ pacman -S gcc
 $ pacman -S libiconv-devel
 $ pacman -S python3
+$ pacman -S mingw-w64-x86_64-rustup
+$ export PATH="/mingw64/bin:$PATH"
+$ rustup default stable
+$ rustup target add x86_64-pc-windows-gnu
 ```
 
 ### Building ###
@@ -33,7 +37,7 @@ $ cd hashcat
 Now type "make" to start compiling hashcat
 
 ```
-$ make
+$ make WIN_PYTHON=""
 ```
 
 The process may take a while, please be patient. Once it's finished, run hashcat by typing "./hashcat.exe"
