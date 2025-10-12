@@ -14,7 +14,9 @@ $ pacman -S make
 $ pacman -S gcc
 $ pacman -S libiconv-devel
 $ pacman -S python3
+$ pacman -S mingw-w64-x86_64-clang
 $ pacman -S mingw-w64-x86_64-rustup
+$ pacman -S mingw-w64-x86_64-toolchain
 $ export PATH="/mingw64/bin:$PATH"
 $ rustup default stable
 $ rustup target add x86_64-pc-windows-gnu
