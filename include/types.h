@@ -379,6 +379,9 @@ typedef enum rule_functions
   RULE_OP_MANGLE_DUPEBLOCK_FIRST   = 'y',
   RULE_OP_MANGLE_DUPEBLOCK_LAST    = 'Y',
   RULE_OP_MANGLE_TITLE             = 'E',
+  RULE_OP_MANGLE_TO_HEX_LOWER      = 'h',
+  RULE_OP_MANGLE_TO_HEX_UPPER      = 'H',
+
 
   /* using character classes */
   RULE_OP_CLASS_BASED              = '~',

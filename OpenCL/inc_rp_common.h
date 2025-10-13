@@ -66,6 +66,9 @@
 #define RULE_OP_MANGLE_DUPEBLOCK_FIRST   'y'
 #define RULE_OP_MANGLE_DUPEBLOCK_LAST    'Y'
 #define RULE_OP_MANGLE_TITLE             'E'
+#define RULE_OP_MANGLE_TO_HEX_LOWER      'h'
+#define RULE_OP_MANGLE_TO_HEX_UPPER      'H'
+
 
 /* using character classes */
 #define RULE_OP_MANGLE_REPLACE_CLASS     0x01

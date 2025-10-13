@@ -1187,6 +1187,96 @@ DECLSPEC HC_INLINE_RP u32 rule_op_mangle_reflect (MAYBE_UNUSED const u32 p0, MAY
   return out_len;
 }
 
+DECLSPEC HC_INLINE_RP u32 rule_op_mangle_to_hex_lower (MAYBE_UNUSED const u32 p0, MAYBE_UNUSED const u32 p1, MAYBE_UNUSED PRIVATE_AS u32 *buf0, MAYBE_UNUSED PRIVATE_AS u32 *buf1, const u32 in_len)
+{
+  u32 buf_in[8];
+
+  buf_in[0] = buf0[0];
+  buf_in[1] = buf0[1];
+  buf_in[2] = buf0[2];
+  buf_in[3] = buf0[3];
+  buf_in[4] = buf1[0];
+  buf_in[5] = buf1[1];
+  buf_in[6] = buf1[2];
+  buf_in[7] = buf1[3];
+
+  PRIVATE_AS u8 *in = (PRIVATE_AS u8 *) buf_in;
+
+  u32 out_len = in_len * 2;
+
+  if (out_len >= 32) return in_len;
+
+  for (int pos = in_len - 1; pos >= 0; pos--)
+  {
+    const u8 c = in[pos];
+
+    const u8 tbl[0x10] =
+    {
+      '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+      'a', 'b', 'c', 'd', 'e', 'f',
+    };
+
+    in[pos * 2 + 1] = tbl[c >>  0 & 15];
+    in[pos * 2] = tbl[c >>  4 & 15];
+  }
+
+  buf0[0] = buf_in[0];
+  buf0[1] = buf_in[1];
+  buf0[2] = buf_in[2];
+  buf0[3] = buf_in[3];
+  buf1[0] = buf_in[4];
+  buf1[1] = buf_in[5];
+  buf1[2] = buf_in[6];
+  buf1[3] = buf_in[7];
+
+  return out_len;
+}
+
+DECLSPEC HC_INLINE_RP u32 rule_op_mangle_to_hex_upper (MAYBE_UNUSED const u32 p0, MAYBE_UNUSED const u32 p1, MAYBE_UNUSED PRIVATE_AS u32 *buf0, MAYBE_UNUSED PRIVATE_AS u32 *buf1, const u32 in_len)
+{
+  u32 buf_in[8];
+
+  buf_in[0] = buf0[0];
+  buf_in[1] = buf0[1];
+  buf_in[2] = buf0[2];
+  buf_in[3] = buf0[3];
+  buf_in[4] = buf1[0];
+  buf_in[5] = buf1[1];
+  buf_in[6] = buf1[2];
+  buf_in[7] = buf1[3];
+
+  PRIVATE_AS u8 *in = (PRIVATE_AS u8 *) buf_in;
+
+  const int out_len = in_len * 2;
+
+  if (out_len >= 32) return in_len;
+
+  for (int pos = in_len - 1; pos >= 0; pos--)
+  {
+    const u8 c = in[pos];
+
+    const u8 tbl[0x10] =
+    {
+      '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+      'A', 'B', 'C', 'D', 'E', 'F',
+    };
+
+    in[pos * 2 + 1] = tbl[c >>  0 & 15];
+    in[pos * 2] = tbl[c >>  4 & 15];
+  }
+
+  buf0[0] = buf_in[0];
+  buf0[1] = buf_in[1];
+  buf0[2] = buf_in[2];
+  buf0[3] = buf_in[3];
+  buf1[0] = buf_in[4];
+  buf1[1] = buf_in[5];
+  buf1[2] = buf_in[6];
+  buf1[3] = buf_in[7];
+
+  return out_len;
+}
+
 DECLSPEC HC_INLINE_RP u32 rule_op_mangle_append (MAYBE_UNUSED const u32 p0, MAYBE_UNUSED const u32 p1, MAYBE_UNUSED PRIVATE_AS u32 *buf0, MAYBE_UNUSED PRIVATE_AS u32 *buf1, const u32 in_len)
 {
   if ((in_len + 1) >= 32) return in_len;
@@ -3112,6 +3202,9 @@ DECLSPEC u32 apply_rule_optimized (const u32 name, const u32 p0, const u32 p1, P
     case RULE_OP_MANGLE_TITLE_SEP:        out_len = rule_op_mangle_title_sep        (p0, p1, buf0, buf1, out_len); break;
     case RULE_OP_MANGLE_TITLE_SEP_CLASS:  out_len = rule_op_mangle_title_sep_class  (p0, p1, buf0, buf1, out_len); break;
     case RULE_OP_MANGLE_TITLE:            out_len = rule_op_mangle_title_sep        (' ', p1, buf0, buf1, out_len); break;
+    case RULE_OP_MANGLE_TO_HEX_LOWER:     out_len = rule_op_mangle_to_hex_lower     (p0, p1, buf0, buf1, out_len); break;
+    case RULE_OP_MANGLE_TO_HEX_UPPER:     out_len = rule_op_mangle_to_hex_upper     (p0, p1, buf0, buf1, out_len); break;
+
   }
 
   return out_len;
