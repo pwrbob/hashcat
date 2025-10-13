@@ -16,6 +16,13 @@ mod test {
     /// test that bindings.rs exists by asserting some very basic things
     #[test]
     fn test_bindings_exists() {
-        assert_eq!(bindings::INT8_MIN, -128);
+        let ctx = bindings::generic_io_t {
+            hash_buf: [0; 256],
+            hash_len: 0,
+            salt_buf: [0; 256],
+            salt_len: 0,
+        };
+        assert_eq!(ctx.hash_len, 0);
+        assert_eq!(ctx.salt_len, 0);
     }
 }
