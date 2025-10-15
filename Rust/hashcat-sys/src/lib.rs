@@ -7,7 +7,11 @@
 #[rustfmt::skip]
 pub mod bindings;
 
-pub use bindings::*;
+/// common functions that are useful in Rust bridge implementations
+pub mod common;
+
+pub use bindings::{bridge_context_t, generic_io_t, generic_io_tmp_t, salt_t};
+pub use common::*;
 
 #[cfg(test)]
 mod test {

@@ -10,7 +10,9 @@ use std::{
     sync::OnceLock,
 };
 
-use hashcat_sys::{bridge_context_t, generic_io_t, generic_io_tmp_t, salt_t};
+use hashcat_sys::{
+    bridge_context_t, common::vec_from_raw_parts, generic_io_t, generic_io_tmp_t, salt_t,
+};
 
 use crate::generic_hash;
 
@@ -39,10 +41,6 @@ impl ThreadContext {
             &self.esalts[salt_id]
         }
     }
-}
-
-unsafe fn vec_from_raw_parts<T: Clone>(data: *const T, length: c_int) -> Vec<T> {
-    Vec::from(unsafe { slice::from_raw_parts(data, length as usize) })
 }
 
 unsafe fn string_from_ptr(ptr: *const c_char) -> String {
