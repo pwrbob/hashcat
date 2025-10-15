@@ -12,7 +12,7 @@ use std::{
 
 use hashcat_sys::{
     bridge_context_t,
-    common::{string_from_ptr, vec_from_raw_parts},
+    common::{string_from_ptr, vec_from_raw},
     generic_io_t, generic_io_tmp_t, salt_t,
 };
 
@@ -80,13 +80,11 @@ pub extern "C" fn new_context(
     assert_eq!(esalts_size as usize, mem::size_of::<generic_io_t>());
     assert_eq!(st_esalts_size as usize, mem::size_of::<generic_io_t>());
     let module_name = string_from_ptr(module_name).unwrap_or_default();
-    let salts = vec_from_raw_parts(salts_buf as *const salt_t, salts_cnt).unwrap_or_default();
-    let esalts =
-        vec_from_raw_parts(esalts_buf as *const generic_io_t, esalts_cnt).unwrap_or_default();
-    let st_salts =
-        vec_from_raw_parts(st_salts_buf as *const salt_t, st_salts_cnt).unwrap_or_default();
+    let salts = vec_from_raw(salts_buf as *const salt_t, salts_cnt).unwrap_or_default();
+    let esalts = vec_from_raw(esalts_buf as *const generic_io_t, esalts_cnt).unwrap_or_default();
+    let st_salts = vec_from_raw(st_salts_buf as *const salt_t, st_salts_cnt).unwrap_or_default();
     let st_esalts =
-        vec_from_raw_parts(st_esalts_buf as *const generic_io_t, st_esalts_cnt).unwrap_or_default();
+        vec_from_raw(st_esalts_buf as *const generic_io_t, st_esalts_cnt).unwrap_or_default();
 
     let bridge_parameter1 = string_from_ptr(bridge_parameter1).unwrap_or_default();
     let bridge_parameter2 = string_from_ptr(bridge_parameter2).unwrap_or_default();
