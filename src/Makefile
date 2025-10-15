@@ -332,13 +332,15 @@ endif
 # OpenCL
 CFLAGS                  += -I$(DEPS_OPENCL_PATH)
 
-# brain and xxHash
+# brain
 ifeq ($(ENABLE_BRAIN),1)
 CFLAGS                  += -DWITH_BRAIN
+endif
+
+# xxHash
 CFLAGS                  += -I$(DEPS_XXHASH_PATH)
 ifeq ($(USE_SYSTEM_XXHASH),1)
 LFLAGS                  += -lxxhash
-endif
 endif
 
 # CUDA binary cache
@@ -573,6 +575,7 @@ clean:
 	$(RM) -rf kernels
 	$(RM) -rf Rust/bridges/*/target
 	$(RM) -rf Rust/feeds/*/target
+	$(RM) -rf Rust/hashcat-sys/src/bindings.rs
 
 .PHONY: distclean
 distclean: clean
@@ -583,6 +586,7 @@ distclean: clean
 	$(RM) -f brain.*
 	$(RM) -rf test_[0-9]*
 	$(RM) -rf tools/luks_tests
+	$(RM) -rf tools/luks2_tests
 
 ##
 ## Targets: Linux install

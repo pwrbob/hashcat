@@ -379,6 +379,9 @@ typedef enum rule_functions
   RULE_OP_MANGLE_DUPEBLOCK_FIRST   = 'y',
   RULE_OP_MANGLE_DUPEBLOCK_LAST    = 'Y',
   RULE_OP_MANGLE_TITLE             = 'E',
+  RULE_OP_MANGLE_TO_HEX_LOWER      = 'h',
+  RULE_OP_MANGLE_TO_HEX_UPPER      = 'H',
+
 
   /* using character classes */
   RULE_OP_CLASS_BASED              = '~',
@@ -728,6 +731,7 @@ typedef enum user_options_defaults
   #else
   HWMON_TEMP_ABORT         = 90,
   #endif
+  HASH_COPY                = false,
   HASH_INFO                = 0,
   HASH_MODE                = 0,
   HCCAPX_MESSAGE_PAIR      = 0,
@@ -860,6 +864,7 @@ typedef enum user_options_map
   IDX_DYNAMIC_X                 = 0xff55,
   IDX_ENCODING_FROM             = 0xff15,
   IDX_ENCODING_TO               = 0xff16,
+  IDX_HASH_COPY                 = 0xff62,
   IDX_HASH_INFO                 = 'H', // 0xff17
   IDX_FORCE                     = 0xff18,
   IDX_HWMON_DISABLE             = 0xff19,
@@ -2611,6 +2616,7 @@ typedef struct user_options
   u32          workload_profile;
   u64          limit;
   u64          skip;
+  bool         hash_copy;
 
 } user_options_t;
 
@@ -2775,13 +2781,13 @@ typedef struct generic_thread_ctx
 
 } generic_thread_ctx_t;
 
-typedef bool (*GENERIC_GLOBAL_INIT)     (generic_global_ctx_t *, generic_thread_ctx_t *, void *hashcat_ctx);
-typedef void (*GENERIC_GLOBAL_TERM)     (generic_global_ctx_t *, generic_thread_ctx_t *, void *hashcat_ctx);
-typedef u64  (*GENERIC_GLOBAL_KEYSPACE) (generic_global_ctx_t *, generic_thread_ctx_t *, void *hashcat_ctx);
+typedef bool (*GENERIC_GLOBAL_INIT)     (generic_global_ctx_t *, generic_thread_ctx_t **, void *);
+typedef void (*GENERIC_GLOBAL_TERM)     (generic_global_ctx_t *, generic_thread_ctx_t **, void *);
+typedef u64  (*GENERIC_GLOBAL_KEYSPACE) (generic_global_ctx_t *, generic_thread_ctx_t **, void *);
 
 typedef bool (*GENERIC_THREAD_INIT)     (generic_global_ctx_t *, generic_thread_ctx_t *);
 typedef void (*GENERIC_THREAD_TERM)     (generic_global_ctx_t *, generic_thread_ctx_t *);
-typedef int  (*GENERIC_THREAD_NEXT)     (generic_global_ctx_t *, generic_thread_ctx_t *, const u8 **);
+typedef int  (*GENERIC_THREAD_NEXT)     (generic_global_ctx_t *, generic_thread_ctx_t *, u8 *);
 typedef bool (*GENERIC_THREAD_SEEK)     (generic_global_ctx_t *, generic_thread_ctx_t *, const u64);
 
 typedef struct generic_ctx
@@ -2789,7 +2795,7 @@ typedef struct generic_ctx
   bool enabled;
 
   generic_global_ctx_t  global_ctx;
-  generic_thread_ctx_t  thread_ctx[DEVICES_MAX];
+  generic_thread_ctx_t *thread_ctx;
 
   char *dynlib_filename;
 
@@ -3142,6 +3148,8 @@ typedef struct module_ctx
   const char *(*module_benchmark_charset)       (const hashconfig_t *, const user_options_t *, const user_options_extra_t *);
   salt_t     *(*module_benchmark_salt)          (const hashconfig_t *, const user_options_t *, const user_options_extra_t *);
   const char *(*module_deprecated_notice)       (const hashconfig_t *, const user_options_t *, const user_options_extra_t *);
+  const char *(*module_usage_notice)            (const hashconfig_t *, const user_options_t *, const user_options_extra_t *);
+  const char *(*module_advice_notice)           (const hashconfig_t *, const user_options_t *, const user_options_extra_t *);
   u32         (*module_dgst_pos0)               (const hashconfig_t *, const user_options_t *, const user_options_extra_t *);
   u32         (*module_dgst_pos1)               (const hashconfig_t *, const user_options_t *, const user_options_extra_t *);
   u32         (*module_dgst_pos2)               (const hashconfig_t *, const user_options_t *, const user_options_extra_t *);

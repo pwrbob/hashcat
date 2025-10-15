@@ -17,6 +17,7 @@ hashcat.dll
 *.log
 *.out
 *.dSYM
+*.su
 kernels/**
 seekdbs/**
 lib/*.a
@@ -33,6 +34,7 @@ obj/*.o
 obj/*.a
 include/CL
 tools/luks_tests
+tools/luks2_tests
 .vscode
 test_edge*
 Rust/feeds/*/target

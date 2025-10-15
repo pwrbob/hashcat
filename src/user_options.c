@@ -82,6 +82,7 @@ static const struct option long_options[] =
   {"generate-rules-seed",       required_argument, NULL, IDX_RP_GEN_SEED},
   {"hwmon-disable",             no_argument,       NULL, IDX_HWMON_DISABLE},
   {"hwmon-temp-abort",          required_argument, NULL, IDX_HWMON_TEMP_ABORT},
+  {"hash-copy",                 no_argument,       NULL, IDX_HASH_COPY},
   {"hash-info",                 no_argument,       NULL, IDX_HASH_INFO},
   {"hash-type",                 required_argument, NULL, IDX_HASH_MODE},
   {"hccapx-message-pair",       required_argument, NULL, IDX_HCCAPX_MESSAGE_PAIR},
@@ -242,6 +243,7 @@ int user_options_init (hashcat_ctx_t *hashcat_ctx)
   user_options->encoding_from             = ENCODING_FROM;
   user_options->encoding_to               = ENCODING_TO;
   user_options->force                     = FORCE;
+  user_options->hash_copy                 = HASH_COPY;
   user_options->hwmon                     = HWMON;
   user_options->hwmon_temp_abort          = HWMON_TEMP_ABORT;
   user_options->hash_info                 = HASH_INFO;
@@ -612,6 +614,7 @@ int user_options_getopt (hashcat_ctx_t *hashcat_ctx, int argc, char **argv)
       case IDX_BRAIN_SESSION_WHITELIST:   user_options->brain_session_whitelist   = optarg;                          break;
       #endif
       case IDX_COLOR_CRACKED:             user_options->color_cracked             = true;                            break;
+      case IDX_HASH_COPY:                 user_options->hash_copy                 = true;                            break;
     }
   }
 
@@ -3095,31 +3098,29 @@ int user_options_check_files (hashcat_ctx_t *hashcat_ctx)
   }
   else if (user_options->attack_mode == ATTACK_MODE_GENERIC)
   {
-    for (int i = 0; i < user_options_extra->hc_workc; i++)
+    //for (int i = 0; i < user_options_extra->hc_workc; i++)
+
+    char *library_filename = user_options_extra->hc_workv[0];
+
+    if (hc_path_exist (library_filename) == false)
     {
-      char *plugin = user_options_extra->hc_workv[i];
+      event_log_error (hashcat_ctx, "%s: %s", library_filename, strerror (errno));
 
-      if (hc_path_exist (plugin) == false)
-      {
-        event_log_error (hashcat_ctx, "%s: %s", plugin, strerror (errno));
+      return -1;
+    }
 
-        return -1;
-      }
+    if (hc_path_is_directory (library_filename) == true)
+    {
+      event_log_error (hashcat_ctx, "%s: A directory cannot be used as first plugin argument.", library_filename);
 
-      if (hc_path_is_directory (plugin) == true)
-      {
-        event_log_error (hashcat_ctx, "%s: A directory cannot be used as a plugin argument.", plugin);
+      return -1;
+    }
 
-        return -1;
-      }
+    if (hc_path_read (library_filename) == false)
+    {
+      event_log_error (hashcat_ctx, "%s: %s", library_filename, strerror (errno));
 
-      if (hc_path_read (plugin) == false)
-      {
-        event_log_error (hashcat_ctx, "%s: %s", plugin, strerror (errno));
-
-        return -1;
-      }
-
+      return -1;
     }
 
     for (int i = 0; i < (int) user_options->rp_files_cnt; i++)

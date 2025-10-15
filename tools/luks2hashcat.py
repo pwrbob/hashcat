@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# Script to extract the hash for use with hashcat modes 295xx and 34100
+
 #
 # Author......: See docs/credits.txt
 # License.....: MIT
@@ -325,6 +327,8 @@ def extract_version2(file):
     segment_offset = int(json_header['segments']['0']['offset'])
     file.seek(segment_offset)
     first_sector = file.read(512)
+    if len(first_sector) < 512:
+        raise ValueError("file contains less data than needed (invalid payload len)")
 
     for key in json_header['keyslots']:
         print(key)

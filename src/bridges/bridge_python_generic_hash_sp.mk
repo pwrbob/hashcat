@@ -53,6 +53,11 @@ bridges/bridge_python_generic_hash_sp.so:  src/bridges/bridge_python_generic_has
 bridges/bridge_python_generic_hash_sp.dll: src/bridges/bridge_python_generic_hash_sp.c src/cpu_features.c obj/combined.WIN.a
 	$(CC_WIN)    $(CCFLAGS) $(CFLAGS_CROSS_WIN)   $^ -o $@ $(LFLAGS_CROSS_WIN)   -shared -fPIC -D BRIDGE_INTERFACE_VERSION_CURRENT=$(BRIDGE_INTERFACE_VERSION) $(PYTHON_CFLAGS_WIN)
 else
+
+ifeq ($(BRIDGE_SUFFIX),dll)
+PYTHON_CFLAGS := $(PYTHON_CFLAGS_WIN)
+endif
+
 ifeq ($(SHARED),1)
 bridges/bridge_python_generic_hash_sp.$(BRIDGE_SUFFIX): src/bridges/bridge_python_generic_hash_sp.c src/cpu_features.c $(HASHCAT_LIBRARY)
 	$(CC)       $(CCFLAGS) $(CFLAGS_NATIVE)       $^ -o $@ $(LFLAGS_NATIVE)      -shared -fPIC -D BRIDGE_INTERFACE_VERSION_CURRENT=$(BRIDGE_INTERFACE_VERSION) $(PYTHON_CFLAGS)
@@ -68,7 +73,7 @@ RESET = \033[0m
 ifeq ($(REPORT_MISSING_DLL),true)
 bridges/bridge_python_generic_hash_sp.dll:
 	@echo ""
-	@echo "$(RED)WARNING$(RESET): Skipping freethreaded plugin 70200: Python Windows headers not found."
+	@echo "$(RED)WARNING$(RESET): Skipping freethreaded plugin 72000: Python Windows headers not found."
 	@echo "         To use -m 72000, you must install the required Python headers."
 	@echo "         Otherwise, you can safely ignore this warning."
 	@echo "         See BUILD_WSL.md how to prepare $(WIN_PYTHON)."
@@ -78,7 +83,7 @@ endif
 ifeq ($(REPORT_MISSING_SO),true)
 bridges/bridge_python_generic_hash_sp.so:
 	@echo ""
-	@echo "$(RED)WARNING$(RESET): Skipping freethreaded plugin 70200: Python 3.12+ headers not found."
+	@echo "$(RED)WARNING$(RESET): Skipping freethreaded plugin 72000: Python 3.12+ headers not found."
 	@echo "         To use -m 72000, you must install the required Python headers."
 	@echo "         Otherwise, you can safely ignore this warning."
 	@echo "         For more information, see 'docs/hashcat-python-plugin-requirements.md'."

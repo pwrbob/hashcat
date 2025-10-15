@@ -33,6 +33,7 @@ void backend_ctx_devices_sync_tuning        (hashcat_ctx_t *hashcat_ctx);
 void backend_ctx_devices_update_power       (hashcat_ctx_t *hashcat_ctx);
 void backend_ctx_devices_kernel_loops       (hashcat_ctx_t *hashcat_ctx);
 
+void backend_session_context_reset          (hashcat_ctx_t *hashcat_ctx);
 int  backend_session_begin                  (hashcat_ctx_t *hashcat_ctx);
 void backend_session_destroy                (hashcat_ctx_t *hashcat_ctx);
 void backend_session_reset                  (hashcat_ctx_t *hashcat_ctx);
@@ -92,9 +93,12 @@ int run_kernel_decompress                   (hashcat_ctx_t *hashcat_ctx, hc_devi
 int run_copy                                (hashcat_ctx_t *hashcat_ctx, hc_device_param_t *device_param, const u64 pws_cnt);
 int run_cracker                             (hashcat_ctx_t *hashcat_ctx, hc_device_param_t *device_param, const u64 pws_pos, const u64 pws_cnt);
 
-HC_API_CALL
-void *hook12_thread (void *p);
-HC_API_CALL
-void *hook23_thread (void *p);
+#if defined (_WIN32) || defined (__WIN32__)
+HC_API_CALL DWORD hook12_thread (void *p);
+HC_API_CALL DWORD hook23_thread (void *p);
+#else
+HC_API_CALL void *hook12_thread (void *p);
+HC_API_CALL void *hook23_thread (void *p);
+#endif
 
 #endif // HC_BACKEND_H
