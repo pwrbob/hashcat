@@ -4,7 +4,7 @@
  */
 use std::{
     cell::OnceCell,
-    ffi::{c_char, c_int, c_void, CStr},
+    ffi::{c_char, c_int, c_void},
     mem,
     path::Path,
     process, ptr, slice,
@@ -12,7 +12,9 @@ use std::{
 };
 
 use hashcat_sys::{
-    bridge_context_t, common::vec_from_raw_parts, generic_io_t, generic_io_tmp_t, salt_t,
+    bridge_context_t,
+    common::{string_from_ptr, vec_from_raw_parts},
+    generic_io_t, generic_io_tmp_t, salt_t,
 };
 
 use crate::{eval::EvalContext, parse, Expr};
@@ -41,14 +43,6 @@ pub(crate) struct ThreadContext {
 impl ThreadContext {
     fn get_raw_esalt(&self, salt_id: usize) -> &generic_io_t {
         &self.esalts[salt_id]
-    }
-}
-
-unsafe fn string_from_ptr(ptr: *const c_char) -> String {
-    if ptr.is_null() {
-        String::new()
-    } else {
-        unsafe { CStr::from_ptr(ptr).to_str().unwrap_or_default().to_string() }
     }
 }
 
