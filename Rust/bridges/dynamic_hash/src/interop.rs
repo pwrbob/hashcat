@@ -76,14 +76,17 @@ pub extern "C" fn new_context(
     assert!(!esalts_buf.is_null());
     assert_eq!(salts_size as usize, mem::size_of::<salt_t>());
     assert_eq!(esalts_size as usize, mem::size_of::<generic_io_t>());
-    let module_name = unsafe { string_from_ptr(module_name) };
-    let salts = unsafe { vec_from_raw_parts(salts_buf as *const salt_t, salts_cnt) };
-    let esalts = unsafe { vec_from_raw_parts(esalts_buf as *const generic_io_t, esalts_cnt) };
+    let module_name = unsafe { string_from_ptr(module_name).unwrap_or_default() };
+    let salts =
+        unsafe { vec_from_raw_parts(salts_buf as *const salt_t, salts_cnt).unwrap_or_default() };
+    let esalts = unsafe {
+        vec_from_raw_parts(esalts_buf as *const generic_io_t, esalts_cnt).unwrap_or_default()
+    };
 
-    let bridge_parameter1 = unsafe { string_from_ptr(bridge_parameter1) };
-    let bridge_parameter2 = unsafe { string_from_ptr(bridge_parameter2) };
-    let bridge_parameter3 = unsafe { string_from_ptr(bridge_parameter3) };
-    let bridge_parameter4 = unsafe { string_from_ptr(bridge_parameter4) };
+    let bridge_parameter1 = unsafe { string_from_ptr(bridge_parameter1).unwrap_or_default() };
+    let bridge_parameter2 = unsafe { string_from_ptr(bridge_parameter2).unwrap_or_default() };
+    let bridge_parameter3 = unsafe { string_from_ptr(bridge_parameter3).unwrap_or_default() };
+    let bridge_parameter4 = unsafe { string_from_ptr(bridge_parameter4).unwrap_or_default() };
 
     Box::into_raw(Box::new(ThreadContext {
         module_name,
@@ -121,12 +124,12 @@ pub extern "C" fn global_init(ctx: *mut bridge_context_t) -> bool {
     let ctx = unsafe { &mut *ctx };
     assert!(!ctx.dynlib_filename.is_null());
 
-    let dynlib_name = unsafe { string_from_ptr(ctx.dynlib_filename) };
+    let dynlib_name = unsafe { string_from_ptr(ctx.dynlib_filename).unwrap_or_default() };
     let dynlib_name = Path::new(&dynlib_name)
         .file_name()
         .and_then(|x| x.to_str())
         .unwrap_or_default();
-    let algorithm = unsafe { string_from_ptr(ctx.bridge_parameter2) };
+    let algorithm = unsafe { string_from_ptr(ctx.bridge_parameter2).unwrap_or_default() };
     match parse::parse(&algorithm) {
         Ok(_) => {
             let info = format!("Rust [{}] [{}]", dynlib_name, algorithm);
