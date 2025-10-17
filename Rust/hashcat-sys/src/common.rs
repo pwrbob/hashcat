@@ -1,9 +1,10 @@
-use crate::{ThreadContext, generic_io_t, salt_t};
 use anyhow::{Result, anyhow};
 use std::{
     ffi::{CStr, c_char, c_int, c_void},
     mem, slice,
 };
+
+use crate::{ThreadContext, generic_io_t, salt_t};
 
 /// convert an array of data of a given type T to a Vec<T>
 pub fn vec_from_raw<T: Clone>(data: *const T, length: c_int) -> Result<Vec<T>> {
